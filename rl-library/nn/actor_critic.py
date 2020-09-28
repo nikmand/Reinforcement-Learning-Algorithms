@@ -1,5 +1,4 @@
 import torch.nn as nn
-from nn.dqn_archs import ClassicDQN
 
 
 class ActorCritic(nn.Module):

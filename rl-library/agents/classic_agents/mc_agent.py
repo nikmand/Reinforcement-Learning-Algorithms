@@ -1,6 +1,5 @@
 import numpy as np
 import random
-import math
 from statistics import mean, stdev
 from agents.agent import Agent
 

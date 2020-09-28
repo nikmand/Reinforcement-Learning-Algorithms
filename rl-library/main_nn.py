@@ -3,14 +3,12 @@ import torch.optim as optim
 import gym
 from utils import constants
 from utils.memory import Memory, MemoryPER
-import matplotlib.pyplot as plt
 import numpy as np
 import logging.config
 from nn.policy_fc import PolicyFC
 from nn.dqn_archs import ClassicDQN, Dueling
 from agents.dqn_agents import DQNAgent, DoubleDQNAgent
-from utils.functions import plot_rewards, plot_epsilon, check_termination
-from torch.optim.lr_scheduler import ReduceLROnPlateau
+from utils.functions import plot_rewards, check_termination
 
 TARGET_UPDATE = 100  # target net is updated with the weights of policy net once every 100 updates
 BATCH_SIZE = 32
