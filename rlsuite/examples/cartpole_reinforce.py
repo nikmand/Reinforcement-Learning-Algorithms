@@ -4,21 +4,21 @@ import torch
 import torch.optim as optim
 import numpy as np
 import matplotlib.pyplot as plt
-from utils import constants
-from agents.a2c_agent import A2C
-from utils.functions import plot_rewards, check_termination
-from nn.actor_critic import ActorCritic
-from torch.utils.tensorboard import SummaryWriter
+from rlsuite.examples import cartpole_constants
+from rlsuite.examples.cartpole_constants import check_termination
+from rlsuite.agents.reinforce_agent import Reinforce
+from rlsuite.utils.functions import plot_rewards
+from rlsuite.nn.policy_fc import PolicyFC
 
 logging.config.fileConfig('logging.conf')
 logger = logging.getLogger('simpleExample')
-# TODO this implementation use a high variance MC approach, use TD(λ) instead
 
 writer = None
-if constants.TENSORBOARD:
+if cartpole_constants.TENSORBOARD:
+    from torch.utils.tensorboard import SummaryWriter
     writer = SummaryWriter()
 
-env = gym.make(constants.environment)
+env = gym.make(cartpole_constants.environment)
 
 # seed = 543  # use for reproducibility
 # env.seed(seed)
@@ -28,29 +28,27 @@ num_of_observations = env.observation_space.shape[0]
 num_of_actions = env.action_space.n
 train_rewards, eval_durations = {}, {}
 
-lr = 3e-2
-layers_dim = [6, 6]
-gamma = 1
-dropout = 0.1
+lr = 1e-2  # from pytorch tutorial and others
+layers_dim = [6]
+gamma = 0.999
 
-network = ActorCritic(num_of_observations, layers_dim, num_of_actions, dropout)
+network = PolicyFC(num_of_observations, layers_dim, num_of_actions)
 
 logger.debug("Number of parameters in our model: {}".format(sum(x.numel() for x in network.parameters())))
 
-criterion = torch.nn.MSELoss()
 optimizer = optim.Adam(network.parameters(), lr)
 
-agent = A2C(env.action_space.n, network, criterion, optimizer, gamma)
+agent = Reinforce(env.action_space.n, network, optimizer, gamma)
 
-for i_episode in range(constants.max_episodes):
-    log_probs, state_values, rewards, max_probs = [], [], [], []
+for i_episode in range(cartpole_constants.max_episodes):
+    log_probs, rewards, max_probs = [], [], []
 
     next_state = env.reset()
 
     done = False
     train = True
     agent.train_mode()
-    if (i_episode + 1) % constants.EVAL_INTERVAL == 0:
+    if (i_episode + 1) % cartpole_constants.EVAL_INTERVAL == 0:
         train = False
         agent.eval_mode()
 
@@ -60,11 +58,10 @@ for i_episode in range(constants.max_episodes):
         # if not train:
         #     env.render()
         state = np.float32(next_state)
-        action, log_prob, state_value, max_prob = agent.choose_action(state, train=train)  # TODO merge train parameter with model_train
+        action, log_prob, max_prob = agent.choose_action(state, train=train)  # TODO merge train parameter with model_train
         next_state, reward, done, _ = env.step(action)
 
         log_probs.append(log_prob)  # even if episode is done we keep the reward and log prop, is this a problem?
-        state_values.append(state_value)
         rewards.append(reward)
         max_probs.append(max_prob)  # only needed for monitoring
 
@@ -72,21 +69,21 @@ for i_episode in range(constants.max_episodes):
     if train:
         train_rewards[i_episode] = episode_reward
         discounted_rewards = agent.calculate_rewards(rewards)
-        loss = agent.update(log_probs, state_values, discounted_rewards)
-        if constants.TENSORBOARD:
+        loss = agent.update(log_probs, discounted_rewards)
+        if cartpole_constants.TENSORBOARD:
             writer.add_scalars('Overview/Rewards', {'Train': episode_reward}, i_episode)
             writer.add_scalar('Overview/Loss', loss, i_episode)
             writer.add_scalar('Reward/Train', episode_reward, i_episode)
             writer.add_scalar('Probs/Train', sum(max_probs) / len(max_probs), i_episode)
             writer.flush()
-            for name, param in agent.actor_critic_net.named_parameters():
+            for name, param in agent.policy_net.named_parameters():
                 headline, title = name.rsplit(".", 1)
                 writer.add_histogram(headline + '/' + title, param, i_episode)
             writer.flush()
 
     else:
         eval_durations[i_episode] = episode_reward
-        if constants.TENSORBOARD:
+        if cartpole_constants.TENSORBOARD:
             writer.add_scalars('Overview/Rewards', {'Eval': episode_reward}, i_episode)
             writer.add_scalar('Reward/Eval', episode_reward, i_episode)
             writer.add_scalar('Probs/Eval', sum(max_probs) / len(max_probs), i_episode)
@@ -102,14 +99,14 @@ else:
 figure = plot_rewards(train_rewards, eval_durations, completed=True)
 
 
-if constants.TENSORBOARD:
+if cartpole_constants.TENSORBOARD:
     writer.add_figure('Plot', figure)
 
     state = np.float32(env.reset())
-    writer.add_graph(agent.actor_critic_net, torch.tensor(state, device=agent.device))
+    writer.add_graph(agent.policy_net, torch.tensor(state, device=agent.device))
 
     # first dict with hparams, second dict with metrics
-    writer.add_hparams({'lr': lr, 'gamma': gamma, 'HL Dims': str(layers_dim)},
+    writer.add_hparams({'lr': lr, 'gamma': gamma, 'Hidden Layers Dims': str(layers_dim)},
                        {'episodes_needed': len(train_rewards)})
     writer.flush()
 

@@ -1,5 +1,5 @@
 import torch.nn as nn
-from nn.dqn_archs import ClassicDQN
+from rlsuite.nn.dqn_archs import ClassicDQN
 
 
 class PolicyFC(nn.Module):

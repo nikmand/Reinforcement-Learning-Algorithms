@@ -2,8 +2,8 @@ import copy
 import random
 import torch
 import math
-from utils.constants import *
-from agents.agent import Agent
+from rlsuite.utils.constants import *
+from rlsuite.agents.agent import Agent
 
 
 class DQNAgent(Agent):

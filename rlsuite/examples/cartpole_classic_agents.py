@@ -1,12 +1,12 @@
 import gym
-from utils import constants
-from utils.constants import RLAlgorithms
 import logging.config
-from utils.quantization import Quantization
-from agents.classic_agents.td_agents import QAgent, DoubleQAgent, SARSAgent
-from utils.functions import plot_rewards
-from itertools import count
 import matplotlib.pyplot as plt
+from rlsuite.examples import cartpole_constants
+from rlsuite.utils.constants import RLAlgorithms
+from rlsuite.utils.quantization import Quantization
+from rlsuite.agents.classic_agents.td_agents import QAgent, DoubleQAgent, SARSAgent
+from rlsuite.utils.functions import plot_rewards
+from itertools import count
 
 
 if __name__ == "__main__":
@@ -15,7 +15,7 @@ if __name__ == "__main__":
     logging.config.fileConfig('logging.conf')
     logger = logging.getLogger('simpleExample')
 
-    env = gym.make(constants.environment)
+    env = gym.make(cartpole_constants.environment)
     high_intervals = env.observation_space.high
     low_intervals = env.observation_space.low
     num_of_actions = env.action_space.n
@@ -23,7 +23,7 @@ if __name__ == "__main__":
     logger.debug(high_intervals)
     logger.debug(low_intervals)
 
-    vars_ls = list(zip(low_intervals, high_intervals, constants.var_freq))
+    vars_ls = list(zip(low_intervals, high_intervals, cartpole_constants.var_freq))
     quantizator = Quantization(vars_ls, lambda x: [x[i] for i in [0, 1, 2, 3]])
 
     logger.debug(quantizator.vars_bins)
@@ -46,10 +46,10 @@ if __name__ == "__main__":
     eval_durations = {}
     means = []
 
-    for i_episode in range(constants.max_episodes):
+    for i_episode in range(cartpole_constants.max_episodes):
 
         train = True
-        if (i_episode + 1) % constants.EVAL_INTERVAL == 0:
+        if (i_episode + 1) % cartpole_constants.EVAL_INTERVAL == 0:
             train = False
 
         observation = env.reset()  #

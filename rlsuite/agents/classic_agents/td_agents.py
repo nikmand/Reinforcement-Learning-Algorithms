@@ -1,6 +1,6 @@
 import random
 import numpy as np
-from agents.classic_agents.td_agent import TDAgent
+from rlsuite.agents.classic_agents.td_agent import TDAgent
 
 
 class QAgent(TDAgent):

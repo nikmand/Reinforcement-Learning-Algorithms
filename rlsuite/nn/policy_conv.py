@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 
+
 class PolicyConv(nn.Module):
     """ To be used if we choose to get the screen outputs as initial features """
     def __init__(self, observations_dim, hidden_dim, output_dim, actions_dim, dqn_arch):

@@ -1,7 +1,7 @@
 import numpy as np
 import random
 from statistics import mean, stdev
-from agents.agent import Agent
+from rlsuite.agents.agent import Agent
 
 
 class MCAgent(Agent):

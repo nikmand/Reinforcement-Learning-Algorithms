@@ -1,16 +1,17 @@
 import gym
-from utils import constants
-from agents.classic_agents.mc_agent import MCAgent
+from rlsuite.examples import cartpole_constants
+from rlsuite.examples.cartpole_constants import check_termination
+from rlsuite.agents.classic_agents.mc_agent import MCAgent
 import logging.config
-from utils.quantization import Quantization
-from utils.functions import plot_rewards, check_termination
+from rlsuite.utils.quantization import Quantization
+from rlsuite.utils.functions import plot_rewards
 import matplotlib.pyplot as plt
 
 # COMMENT it seems that monte carlo has high variance maybe we should reduce exploration
 logging.config.fileConfig('logging.conf')
 logger = logging.getLogger('simpleExample')
 
-env = gym.make(constants.environment)
+env = gym.make(cartpole_constants.environment)
 train_durations = {}
 eval_durations = {}
 
@@ -19,16 +20,16 @@ num_of_actions = env.action_space.n
 high_intervals = env.observation_space.high
 low_intervals = env.observation_space.low
 
-vars_ls = list(zip(low_intervals, high_intervals, constants.var_freq))
+vars_ls = list(zip(low_intervals, high_intervals, cartpole_constants.var_freq))
 quantizator = Quantization(vars_ls, lambda x: [x[i] for i in [0, 1, 2, 3]])
 
 agent = MCAgent(num_of_actions, quantizator.dimensions)
 
-for i_episode in range(constants.max_episodes):
+for i_episode in range(cartpole_constants.max_episodes):
     # Initialize the environment and state
     done = False
     train = True
-    if (i_episode + 1) % constants.EVAL_INTERVAL == 0:
+    if (i_episode + 1) % cartpole_constants.EVAL_INTERVAL == 0:
         train = False
 
     next_observation = env.reset()

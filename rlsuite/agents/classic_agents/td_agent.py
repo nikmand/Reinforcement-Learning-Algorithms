@@ -3,7 +3,7 @@ from abc import ABC
 import numpy as np
 import random
 import math
-from agents.agent import Agent
+from rlsuite.agents.agent import Agent
 
 
 class TDAgent(Agent, ABC):

@@ -1,5 +1,5 @@
 import torch
-from agents.agent import Agent
+from rlsuite.agents.agent import Agent
 from torch.distributions import Categorical
 import torch.nn.functional as F
 

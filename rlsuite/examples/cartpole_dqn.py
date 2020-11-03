@@ -1,14 +1,15 @@
 import torch
 import torch.optim as optim
 import gym
-from utils import constants
-from utils.memory import Memory, MemoryPER
 import numpy as np
 import logging.config
-from nn.policy_fc import PolicyFC
-from nn.dqn_archs import ClassicDQN, Dueling
-from agents.dqn_agents import DQNAgent, DoubleDQNAgent
-from utils.functions import plot_rewards, check_termination
+from rlsuite.examples import cartpole_constants
+from rlsuite.examples.cartpole_constants import check_termination
+from rlsuite.utils.memory import Memory, MemoryPER
+from rlsuite.nn.policy_fc import PolicyFC
+from rlsuite.nn.dqn_archs import ClassicDQN, Dueling
+from rlsuite.agents.dqn_agents import DQNAgent, DoubleDQNAgent
+from rlsuite.utils.functions import plot_rewards
 
 TARGET_UPDATE = 100  # target net is updated with the weights of policy net once every 100 updates
 BATCH_SIZE = 32
@@ -17,11 +18,11 @@ logging.config.fileConfig('logging.conf')
 log = logging.getLogger('simpleExample')
 
 writer = None
-if constants.TENSORBOARD:
+if cartpole_constants.TENSORBOARD:
     from torch.utils.tensorboard import SummaryWriter
     writer = SummaryWriter()
 
-env = gym.make(constants.environment)
+env = gym.make(cartpole_constants.environment)
 num_of_observations = env.observation_space.shape[0]
 num_of_actions = env.action_space.n
 
@@ -64,7 +65,7 @@ steps_done = 0
 train_rewards, eval_rewards = {}, {}
 epsilon = []
 
-for i_episode in range(constants.max_episodes):
+for i_episode in range(cartpole_constants.max_episodes):
     # DQN paper starts from a partially
     # memory is not episodic
     # Initialize the environment and state
@@ -73,7 +74,7 @@ for i_episode in range(constants.max_episodes):
     done = False
     train = True
     agent.train_mode()
-    if (i_episode + 1) % constants.EVAL_INTERVAL == 0:
+    if (i_episode + 1) % cartpole_constants.EVAL_INTERVAL == 0:
         train = False
         agent.eval_mode()
 
@@ -105,7 +106,7 @@ for i_episode in range(constants.max_episodes):
             memory.batch_update(indices, errors)
             if double and (steps_done % TARGET_UPDATE == 0):  # Update the target network, had crucial impact
                 agent.update_target_net()
-                if constants.TENSORBOARD:
+                if cartpole_constants.TENSORBOARD:
                     for name, param in agent.target_net.named_parameters():
                         headline, title = name.rsplit(".", 1)
                         writer.add_histogram('TargetNet/' + headline + '/' + title, param, i_episode)
@@ -113,7 +114,7 @@ for i_episode in range(constants.max_episodes):
 
     if train:
         train_rewards[i_episode] = episode_reward
-        if constants.TENSORBOARD:
+        if cartpole_constants.TENSORBOARD:
             # writer.add_scalars('Overview/Rewards', {'Train': episode_reward}, i_episode)
             writer.add_scalar('Agent/Loss', total_loss / episode_duration, i_episode)
             writer.add_scalar('Agent/Reward Train', episode_reward, i_episode)
@@ -125,7 +126,7 @@ for i_episode in range(constants.max_episodes):
 
     else:
         eval_rewards[i_episode] = episode_reward
-        if constants.TENSORBOARD:
+        if cartpole_constants.TENSORBOARD:
             # writer.add_scalars('Overview/Rewards', {'Eval': episode_reward}, i_episode)
             writer.add_scalar('Agent/Reward Eval', episode_reward, i_episode)
             writer.flush()
@@ -136,7 +137,7 @@ for i_episode in range(constants.max_episodes):
     # plot_durations(train_durations, eval_durations)
     epsilon.append(agent.epsilon)
     # plot_epsilon(epsilon)
-    if constants.TENSORBOARD:
+    if cartpole_constants.TENSORBOARD:
         writer.add_scalar('Agent/Epsilon', agent.epsilon, i_episode)
         writer.add_scalar('Agent/Steps', steps_done, i_episode)
         writer.flush()
@@ -146,7 +147,7 @@ else:
 
 figure = plot_rewards(train_rewards, eval_rewards, completed=True)
 # plt.show()
-if constants.TENSORBOARD:
+if cartpole_constants.TENSORBOARD:
     writer.add_figure('Plot', figure)
 
     state = np.float32(env.reset())
