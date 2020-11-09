@@ -1,5 +1,5 @@
 # from distutils.core import setup
-from setuptools import setup, find_packages
+from setuptools import setup, find_namespace_packages
 
 with open('README.md', 'r') as long_desc_file:
     long_description = long_desc_file.read()
@@ -9,7 +9,7 @@ setup(
     version='1.0.0',
     maintainer='Nikiforos Mandilaras',
     maintainer_email='nikmand@outlook.com',
-    packages=find_packages(),
+    packages=find_namespace_packages(),
     url='https://github.com/nikmand/reinforcement-learning-library',
     license='',
     description='Implementation of Reinforcement Learning Algorithms',
