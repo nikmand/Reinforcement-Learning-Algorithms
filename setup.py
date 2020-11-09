@@ -16,8 +16,8 @@ setup(
     long_description=long_description,
     python_requires='>=3.5',
     install_requires=[
-    #     "torch==1.5.0+cpu",
-    #     "torchvision==0.6.0+cpu",
+         "torch",
+         "torchvision",
         "tb-nightly",
         "gym",
         "matplotlib"],
