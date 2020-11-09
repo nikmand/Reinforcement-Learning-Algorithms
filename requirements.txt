@@ -3,4 +3,3 @@ torchvision==0.6.0+cpu
 tb-nightly
 gym
 matplotlib
-# ray[rllib]
