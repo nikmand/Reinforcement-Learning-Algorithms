@@ -9,7 +9,7 @@ setup(
     version='1.0.0',
     maintainer='Nikiforos Mandilaras',
     maintainer_email='nikmand@outlook.com',
-    packages=find_packages(include=['rlsuite', 'rlsuite.*']),
+    packages=find_packages(),
     url='https://github.com/nikmand/reinforcement-learning-library',
     license='',
     description='Implementation of Reinforcement Learning Algorithms',
