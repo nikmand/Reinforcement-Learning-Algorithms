@@ -3,19 +3,20 @@ import torch.optim as optim
 import gym
 import numpy as np
 import logging.config
-from rlsuite.examples import cartpole_constants
-from rlsuite.examples.cartpole_constants import check_termination
+from rlsuite.examples.cartpole import cartpole_constants
+from rlsuite.examples.cartpole.cartpole_constants import check_termination, LOGGER_PATH, LOG_WEIGHTS
 from rlsuite.utils.memory import Memory, MemoryPER
 from rlsuite.nn.policy_fc import PolicyFC
 from rlsuite.nn.dqn_archs import ClassicDQN, Dueling
 from rlsuite.agents.dqn_agents import DQNAgent, DoubleDQNAgent
 from rlsuite.utils.functions import plot_rewards
+from rlsuite.utils.constants import *
 
 TARGET_UPDATE = 100  # target net is updated with the weights of policy net once every 100 updates
 BATCH_SIZE = 32
 
-logging.config.fileConfig('logging.conf')
-log = logging.getLogger('simpleExample')
+logging.config.fileConfig(LOGGER_PATH)
+log = logging.getLogger(logger)
 
 writer = None
 if cartpole_constants.TENSORBOARD:
@@ -106,7 +107,7 @@ for i_episode in range(cartpole_constants.max_episodes):
             memory.batch_update(indices, errors)
             if double and (steps_done % TARGET_UPDATE == 0):  # Update the target network, had crucial impact
                 agent.update_target_net()
-                if cartpole_constants.TENSORBOARD:
+                if cartpole_constants.TENSORBOARD and LOG_WEIGHTS:
                     for name, param in agent.target_net.named_parameters():
                         headline, title = name.rsplit(".", 1)
                         writer.add_histogram('TargetNet/' + headline + '/' + title, param, i_episode)
@@ -119,9 +120,10 @@ for i_episode in range(cartpole_constants.max_episodes):
             writer.add_scalar('Agent/Loss', total_loss / episode_duration, i_episode)
             writer.add_scalar('Agent/Reward Train', episode_reward, i_episode)
             writer.flush()
-            for name, param in agent.policy_net.named_parameters():
-                headline, title = name.rsplit(".", 1)
-                writer.add_histogram('PolicyNet/' + headline + '/' + title, param, i_episode)
+            if LOG_WEIGHTS:
+                for name, param in agent.policy_net.named_parameters():
+                    headline, title = name.rsplit(".", 1)
+                    writer.add_histogram('PolicyNet/' + headline + '/' + title, param, i_episode)
             writer.flush()
 
     else:
@@ -130,9 +132,9 @@ for i_episode in range(cartpole_constants.max_episodes):
             # writer.add_scalars('Overview/Rewards', {'Eval': episode_reward}, i_episode)
             writer.add_scalar('Agent/Reward Eval', episode_reward, i_episode)
             writer.flush()
-            if check_termination(eval_rewards):
-                log.info('Solved after {} episodes.'.format(len(train_rewards)))
-                break
+        if check_termination(eval_rewards):
+            log.info('Solved after {} episodes.'.format(len(train_rewards)))
+            break
 
     # plot_durations(train_durations, eval_durations)
     epsilon.append(agent.epsilon)

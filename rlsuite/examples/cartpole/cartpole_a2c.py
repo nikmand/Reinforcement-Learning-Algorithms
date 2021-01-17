@@ -4,8 +4,8 @@ import torch
 import torch.optim as optim
 import numpy as np
 import matplotlib.pyplot as plt
-from rlsuite.examples import cartpole_constants
-from rlsuite.examples.cartpole_constants import check_termination
+from rlsuite.examples.cartpole import cartpole_constants
+from rlsuite.examples.cartpole.cartpole_constants import check_termination
 from rlsuite.agents.a2c_agent import A2C
 from rlsuite.utils.functions import plot_rewards
 from rlsuite.nn.actor_critic import ActorCritic

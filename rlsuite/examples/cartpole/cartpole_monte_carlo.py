@@ -1,6 +1,6 @@
 import gym
-from rlsuite.examples import cartpole_constants
-from rlsuite.examples.cartpole_constants import check_termination
+from rlsuite.examples.cartpole import cartpole_constants
+from rlsuite.examples.cartpole.cartpole_constants import check_termination
 from rlsuite.agents.classic_agents.mc_agent import MCAgent
 import logging.config
 from rlsuite.utils.quantization import Quantization

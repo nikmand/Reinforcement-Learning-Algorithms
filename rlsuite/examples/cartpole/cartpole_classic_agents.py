@@ -1,7 +1,7 @@
 import gym
 import logging.config
 import matplotlib.pyplot as plt
-from rlsuite.examples import cartpole_constants
+from rlsuite.examples.cartpole import cartpole_constants
 from rlsuite.utils.constants import RLAlgorithms
 from rlsuite.utils.quantization import Quantization
 from rlsuite.agents.classic_agents.td_agents import QAgent, DoubleQAgent, SARSAgent
