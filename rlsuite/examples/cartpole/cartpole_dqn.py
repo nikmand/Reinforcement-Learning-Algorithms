@@ -12,16 +12,16 @@ from rlsuite.agents.dqn_agents import DQNAgent, DoubleDQNAgent
 from rlsuite.utils.functions import plot_rewards
 from rlsuite.utils.constants import *
 
-TARGET_UPDATE = 100  # target net is updated with the weights of policy net once every 100 updates
+TARGET_NET_UPDATE_PERIOD = 100  # target net is updated with the weights of policy net once every 100 updates (steps)
 BATCH_SIZE = 32
 
 logging.config.fileConfig(LOGGER_PATH)
 log = logging.getLogger(logger)
 
-writer = None
+tensorboard_writer = None
 if cartpole_constants.TENSORBOARD:
     from torch.utils.tensorboard import SummaryWriter
-    writer = SummaryWriter()
+    tensorboard_writer = SummaryWriter()
 
 env = gym.make(cartpole_constants.environment)
 num_of_observations = env.observation_space.shape[0]
@@ -105,33 +105,34 @@ for i_episode in range(cartpole_constants.max_episodes):
             total_loss += loss
             agent.adjust_exploration(steps_done)  # rate is updated at every step - taken from the tutorial
             memory.batch_update(indices, errors)
-            if double and (steps_done % TARGET_UPDATE == 0):  # Update the target network, had crucial impact
+            if double and (steps_done % TARGET_NET_UPDATE_PERIOD == 0):
+                # Update the target network, the frequency of the update had crucial impact
                 agent.update_target_net()
                 if cartpole_constants.TENSORBOARD and LOG_WEIGHTS:
                     for name, param in agent.target_net.named_parameters():
                         headline, title = name.rsplit(".", 1)
-                        writer.add_histogram('TargetNet/' + headline + '/' + title, param, i_episode)
-                    writer.flush()
+                        tensorboard_writer.add_histogram('TargetNet/' + headline + '/' + title, param, i_episode)
+                    tensorboard_writer.flush()
 
     if train:
         train_rewards[i_episode] = episode_reward
         if cartpole_constants.TENSORBOARD:
             # writer.add_scalars('Overview/Rewards', {'Train': episode_reward}, i_episode)
-            writer.add_scalar('Agent/Loss', total_loss / episode_duration, i_episode)
-            writer.add_scalar('Agent/Reward Train', episode_reward, i_episode)
-            writer.flush()
+            tensorboard_writer.add_scalar('Agent/Loss', total_loss / episode_duration, i_episode)
+            tensorboard_writer.add_scalar('Agent/Reward Train', episode_reward, i_episode)
+            tensorboard_writer.flush()
             if LOG_WEIGHTS:
                 for name, param in agent.policy_net.named_parameters():
                     headline, title = name.rsplit(".", 1)
-                    writer.add_histogram('PolicyNet/' + headline + '/' + title, param, i_episode)
-            writer.flush()
+                    tensorboard_writer.add_histogram('PolicyNet/' + headline + '/' + title, param, i_episode)
+            tensorboard_writer.flush()
 
     else:
         eval_rewards[i_episode] = episode_reward
         if cartpole_constants.TENSORBOARD:
             # writer.add_scalars('Overview/Rewards', {'Eval': episode_reward}, i_episode)
-            writer.add_scalar('Agent/Reward Eval', episode_reward, i_episode)
-            writer.flush()
+            tensorboard_writer.add_scalar('Agent/Reward Eval', episode_reward, i_episode)
+            tensorboard_writer.flush()
         if check_termination(eval_rewards):
             log.info('Solved after {} episodes.'.format(len(train_rewards)))
             break
@@ -140,9 +141,9 @@ for i_episode in range(cartpole_constants.max_episodes):
     epsilon.append(agent.epsilon)
     # plot_epsilon(epsilon)
     if cartpole_constants.TENSORBOARD:
-        writer.add_scalar('Agent/Epsilon', agent.epsilon, i_episode)
-        writer.add_scalar('Agent/Steps', steps_done, i_episode)
-        writer.flush()
+        tensorboard_writer.add_scalar('Agent/Epsilon', agent.epsilon, i_episode)
+        tensorboard_writer.add_scalar('Agent/Steps', steps_done, i_episode)
+        tensorboard_writer.flush()
 
 else:
     log.info("Unable to reach goal in {} training episodes.".format(len(train_rewards)))
@@ -150,17 +151,17 @@ else:
 figure = plot_rewards(train_rewards, eval_rewards, completed=True)
 # plt.show()
 if cartpole_constants.TENSORBOARD:
-    writer.add_figure('Plot', figure)
+    tensorboard_writer.add_figure('Plot', figure)
 
     state = np.float32(env.reset())
-    writer.add_graph(agent.policy_net, torch.tensor(state, device=agent.device))
+    tensorboard_writer.add_graph(agent.policy_net, torch.tensor(state, device=agent.device))
 
     # first dict with hparams, second dict with metrics
-    writer.add_hparams({'lr': lr, 'gamma': gamma, 'HL Dims': str(layers_dim), 'Double': double, 'Dueling': dueling,
-                        'PER': per, 'Mem Size': mem_size, 'Target_upd_interval': TARGET_UPDATE,
+    tensorboard_writer.add_hparams({'lr': lr, 'gamma': gamma, 'HL Dims': str(layers_dim), 'Double': double, 'Dueling': dueling,
+                        'PER': per, 'Mem Size': mem_size, 'Target_upd_interval': TARGET_NET_UPDATE_PERIOD,
                         'Batch Size': BATCH_SIZE, 'EPS_DECAY': eps_decay},
-                       {'episodes_needed': len(train_rewards)})
-    writer.flush()
-    writer.close()
+                                   {'episodes_needed': len(train_rewards)})
+    tensorboard_writer.flush()
+    tensorboard_writer.close()
 
 env.close()

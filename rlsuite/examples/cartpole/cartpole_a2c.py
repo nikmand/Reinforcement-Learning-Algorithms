@@ -5,13 +5,13 @@ import torch.optim as optim
 import numpy as np
 import matplotlib.pyplot as plt
 from rlsuite.examples.cartpole import cartpole_constants
-from rlsuite.examples.cartpole.cartpole_constants import check_termination
+from rlsuite.examples.cartpole.cartpole_constants import check_termination, LOGGER_PATH, LOG_WEIGHTS
 from rlsuite.agents.a2c_agent import A2C
 from rlsuite.utils.functions import plot_rewards
 from rlsuite.nn.actor_critic import ActorCritic
 from torch.utils.tensorboard import SummaryWriter
 
-logging.config.fileConfig('logging.conf')
+logging.config.fileConfig(LOGGER_PATH)
 logger = logging.getLogger('simpleExample')
 # TODO this implementation use a high variance MC approach, use TD(λ) instead
 
@@ -80,9 +80,10 @@ for i_episode in range(cartpole_constants.max_episodes):
             writer.add_scalar('Reward/Train', episode_reward, i_episode)
             writer.add_scalar('Probs/Train', sum(max_probs) / len(max_probs), i_episode)
             writer.flush()
-            for name, param in agent.actor_critic_net.named_parameters():
-                headline, title = name.rsplit(".", 1)
-                writer.add_histogram(headline + '/' + title, param, i_episode)
+            if LOG_WEIGHTS:
+                for name, param in agent.actor_critic_net.named_parameters():
+                    headline, title = name.rsplit(".", 1)
+                    writer.add_histogram(headline + '/' + title, param, i_episode)
             writer.flush()
 
     else:

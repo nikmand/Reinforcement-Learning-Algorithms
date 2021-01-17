@@ -2,7 +2,6 @@ import copy
 import random
 import torch
 import math
-from rlsuite.utils.constants import *
 from rlsuite.agents.agent import Agent
 
 
@@ -14,7 +13,7 @@ class DQNAgent(Agent):
         self.device = 'cpu'  # torch.device("cuda" if torch.cuda.is_available() else "cpu")
         # print(self.device) seems slower with gpu
         self.policy_net = network.to(self.device)
-        self.target_net = copy.deepcopy(self.policy_net)  # if True else self.policy_net  # for simple Deep Q Learning
+        self.target_net = copy.deepcopy(self.policy_net)  # if simple DQN target_net initialized but never used
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.target_net.eval()  # gradient updates never happens in target net
         self.criterion = criterion
@@ -55,9 +54,9 @@ class DQNAgent(Agent):
         # Compute the expected Q values
         expected_q_values = reward + (1 - done.int()) * self.gamma * next_state_values
         # we want to take into account next states' values only if they are not final states
-        pred = predicted_q_values.squeeze(1)
+        predictions = predicted_q_values.squeeze(1)
         target = expected_q_values.detach()
-        loss = self.criterion(pred, target)
+        loss = self.criterion(predictions, target)
         if is_weights is not None:
             loss = torch.tensor(is_weights, device=self.device) * loss
         loss = loss.mean()
@@ -69,7 +68,7 @@ class DQNAgent(Agent):
         #     param.grad.data.clamp_(-1, 1)           # but the paper applies this to the loss
         self.optimizer.step()  # updates weights
         # self.scheduler.step(loss)  # dynamicaly change the lr
-        errors = torch.abs(pred - target).data.numpy()
+        errors = torch.abs(predictions - target).data.numpy()
 
         return loss, errors
 
@@ -79,13 +78,16 @@ class DQNAgent(Agent):
         return next_state_values
 
     def update_target_net(self):
+        """ Weights of policy net are copied to target net"""
+
         # We can also use  other techniques for target updating like Polyak Averaging
         self.target_net.load_state_dict(self.policy_net.state_dict())
 
     def adjust_exploration(self, decaying_schedule):
+        """ Progressively decrease the exploration rate """
         # TODO check VDBE-Softmax
         self.epsilon = self.eps_end + (self.eps_start - self.eps_end) * math.exp(-decaying_schedule * self.eps_decay)
-        # the update function is used by series of Deep RL
+        # this update function is used by the series tutorial in Deep RL
 
     def save_checkpoint(self, filename):
         pass
