@@ -65,7 +65,7 @@ class Reinforce(Agent):
         self.policy_net.eval()
 
     def save_checkpoint(self, filename):
-        pass
+        raise NotImplementedError
 
     def load_checkpoint(self, filename):
-        pass
+        raise NotImplementedError

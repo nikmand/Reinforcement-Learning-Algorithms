@@ -72,7 +72,7 @@ class A2C(Agent):
         self.actor_critic_net.eval()
 
     def save_checkpoint(self, filename):
-        pass
+        raise NotImplementedError
 
     def load_checkpoint(self, filename):
-        pass
+        raise NotImplementedError

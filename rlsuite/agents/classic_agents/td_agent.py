@@ -28,11 +28,11 @@ class TDAgent(Agent, ABC):
         #  (sum(self.q_table.shape)*2)
 
     def save_checkpoint(self, filename):
-        pass
+        raise NotImplementedError
     #     with open(filename, 'wb') as f:
     #         pickle.dump([X_train, y_train], f)
 
     def load_checkpoint(self, filename):
-        pass
+        raise NotImplementedError
     #     with open(filename, 'rb') as f:
     #         var_you_want_to_load_into = pickle.load(f)

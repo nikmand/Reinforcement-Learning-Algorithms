@@ -10,13 +10,13 @@ from rlsuite.nn.policy_fc import PolicyFC
 from rlsuite.nn.dqn_archs import ClassicDQN, Dueling
 from rlsuite.agents.dqn_agents import DQNAgent, DoubleDQNAgent
 from rlsuite.utils.functions import plot_rewards
-from rlsuite.utils.constants import *
+from rlsuite.utils.constants import LOGGER
 
 TARGET_NET_UPDATE_PERIOD = 100  # target net is updated with the weights of policy net once every 100 updates (steps)
 BATCH_SIZE = 32
 
 logging.config.fileConfig(LOGGER_PATH)
-log = logging.getLogger(logger)
+log = logging.getLogger(LOGGER)
 
 tensorboard_writer = None
 if cartpole_constants.TENSORBOARD:

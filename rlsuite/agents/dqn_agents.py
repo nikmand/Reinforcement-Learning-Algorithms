@@ -90,10 +90,10 @@ class DQNAgent(Agent):
         # this update function is used by the series tutorial in Deep RL
 
     def save_checkpoint(self, filename):
-        pass
+        raise NotImplementedError
 
     def load_checkpoint(self, filename):
-        pass
+        raise NotImplementedError
 
     def train_mode(self):
         self.policy_net.train()

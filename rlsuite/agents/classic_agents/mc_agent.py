@@ -58,7 +58,7 @@ class MCAgent(Agent):
         return discounted_rewards
 
     def load_checkpoint(self, filename):
-        pass
+        raise NotImplementedError
 
     def save_checkpoint(self, filename):
-        pass
+        raise NotImplementedError

@@ -1,6 +1,6 @@
 from enum import Enum
 
-logger = 'simpleExample'
+LOGGER = 'simpleExample'
 
 logger_path = ""
 
