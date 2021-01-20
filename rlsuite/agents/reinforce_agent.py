@@ -5,19 +5,18 @@ import torch.nn.functional as F
 
 
 class Reinforce(Agent):
+    """ Implementation of policy gradients agent """
 
     def __init__(self, num_of_actions, network, optimizer, gamma=0.999, gpu=False):
-        """
-
-        """
+        """  """
         super().__init__(num_of_actions, gamma)
         self.device = torch.device("cuda" if torch.cuda.is_available() and gpu else "cpu")
-        # print(self.device) seems slower with gpu
         self.policy_net = network.to(self.device)
         self.optimizer = optimizer
 
     def choose_action(self, state, train=True):
-        """  """
+        """ Our neural network based only on current state outputs the probabilities of taken every possible action.
+        We form a distribution and we sample from it. By this way we achieve exploration as well. """
         state = torch.tensor(state, device=self.device)
         probs = F.softmax(self.policy_net(state), dim=-1)  # each element of probs is the relative probability of sampling the class at that index
         m = Categorical(probs)  # Creates a categorical distribution parameterized by probs
@@ -51,9 +50,11 @@ class Reinforce(Agent):
         discounted_reward = 0
         for r in rewards[::-1]:
             discounted_reward = r + self.gamma * discounted_reward
+            # inserted at first place all other elements are shifted to the right
             discounted_rewards.insert(0, discounted_reward)
         discounted_rewards = torch.tensor(discounted_rewards)
         discounted_rewards = (discounted_rewards - discounted_rewards.mean()) / (discounted_rewards.std() + 1e-9)
+        # 1e-9 used to avoid division by zero
         # the standardization doesn't seems to have a great effect, but it is used by all tutorials
 
         return discounted_rewards

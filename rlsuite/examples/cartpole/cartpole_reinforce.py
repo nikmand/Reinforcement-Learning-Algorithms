@@ -20,7 +20,8 @@ if cartpole_constants.TENSORBOARD:
 
 env = gym.make(cartpole_constants.environment)
 
-# seed = 543  # use for reproducibility
+# use for reproducibility
+# seed = 543
 # env.seed(seed)
 # torch.manual_seed(seed)
 

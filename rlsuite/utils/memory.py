@@ -17,9 +17,11 @@ class Memory:
         return random.sample(self.memory, batch_size), None, None  # returns a list of samples(tuples)
 
     def batch_update(self, tree_idx, abs_errors):
+        """ As no priorities are used in simple memory, update has no effect """
         pass
 
     def flush(self):  # if we use flush in every episode it doesn't get trained at all
+        """ In case we want to empty the memory. Used in experiments when a new instance of the problem comes up. """
         self.memory.clear()
 
 
@@ -106,4 +108,5 @@ class MemoryPER:  # stored as ( s, a, r, s_ ) in SumTree
             self.tree.update(ti, p)
 
     def flush(self):
+        """ Overwrites behaviour of flush method """
         pass

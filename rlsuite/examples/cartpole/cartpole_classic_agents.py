@@ -84,8 +84,8 @@ if __name__ == "__main__":
             state = new_state
             action = new_action
         else:
-            pass
             # print("Episode {} finished successful!".format(i_episode))
+            pass
 
     env.close()
 
