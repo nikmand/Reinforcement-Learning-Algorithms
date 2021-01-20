@@ -7,13 +7,13 @@ from rlsuite.utils.quantization import Quantization
 from rlsuite.agents.classic_agents.td_agents import QAgent, DoubleQAgent, SARSAgent
 from rlsuite.utils.functions import plot_rewards
 from itertools import count
+from rlsuite.utils.constants import LOGGER
 
+logging.config.fileConfig(cartpole_constants.LOGGER_PATH)
+logger = logging.getLogger(LOGGER)
 
 if __name__ == "__main__":
     """The problem is considered solved when the poll stays upright for over 195 time steps, 100 times consecutively"""
-
-    logging.config.fileConfig('logging.conf')
-    logger = logging.getLogger('simpleExample')
 
     env = gym.make(cartpole_constants.environment)
     high_intervals = env.observation_space.high

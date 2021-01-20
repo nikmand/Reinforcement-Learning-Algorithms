@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 
 class Reinforce(Agent):
-    """ Implementation of policy gradients agent """
+    """ Implementation of policy gradients agent. Can be used only in episodic environments. """
 
     def __init__(self, num_of_actions, network, optimizer, gamma=0.999, gpu=False):
         """  """
@@ -17,19 +17,27 @@ class Reinforce(Agent):
     def choose_action(self, state, train=True):
         """ Our neural network based only on current state outputs the probabilities of taken every possible action.
         We form a distribution and we sample from it. By this way we achieve exploration as well. """
+
         state = torch.tensor(state, device=self.device)
-        probs = F.softmax(self.policy_net(state), dim=-1)  # each element of probs is the relative probability of sampling the class at that index
+        # each element of probs is the relative probability of sampling the class at that index
+        probs = F.softmax(self.policy_net(state), dim=-1)
+
         m = Categorical(probs)  # Creates a categorical distribution parameterized by probs
+
+        # MY MODIFICATION act greedily when evaluating,
+        # it cancels the stochastic nature of the algorithm
         if train:
             action = m.sample()  # we choose an action based on their probability
         else:
-            action = probs.argmax()  # mine addition, it cancels the stochastic nature of the algorithm but cartpole is a deterministic env
+            action = probs.argmax()
+
         log_prob = m.log_prob(action)
         return action.item(), log_prob, probs.max()  # action is a tensor so we return just the number
 
     def update(self, log_probs, discounted_rewards):
         """ Calculates the loss function for every step of the episode, by calculating the log_prob and the
          corresponding reward. We then take the sum of those values and we apply backpropagation."""
+
         policy_loss = []
         for log_prob, discounted_reward in zip(log_probs, discounted_rewards):
             policy_loss.append(-log_prob * discounted_reward)  # we add minus to turn score function into loss function

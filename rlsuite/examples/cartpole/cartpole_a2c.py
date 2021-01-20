@@ -10,113 +10,114 @@ from rlsuite.agents.a2c_agent import A2C
 from rlsuite.utils.functions import plot_rewards
 from rlsuite.nn.actor_critic import ActorCritic
 from torch.utils.tensorboard import SummaryWriter
+from rlsuite.utils.constants import LOGGER
 
 logging.config.fileConfig(LOGGER_PATH)
-logger = logging.getLogger('simpleExample')
+logger = logging.getLogger(LOGGER)
 # TODO this implementation use a high variance MC approach, use TD(λ) instead
 
-writer = None
-if cartpole_constants.TENSORBOARD:
-    writer = SummaryWriter()
+if __name__ == "__main__":
 
-env = gym.make(cartpole_constants.environment)
+    writer = SummaryWriter() if cartpole_constants.TENSORBOARD else None
 
-# seed = 543  # use for reproducibility
-# env.seed(seed)
-# torch.manual_seed(seed)
+    env = gym.make(cartpole_constants.environment)
 
-num_of_observations = env.observation_space.shape[0]
-num_of_actions = env.action_space.n
-train_rewards, eval_durations = {}, {}
+    # seed = 543  # use for reproducibility
+    # env.seed(seed)
+    # torch.manual_seed(seed)
 
-lr = 3e-2
-layers_dim = [6, 6]
-gamma = 1
-dropout = 0.1
+    num_of_observations = env.observation_space.shape[0]
+    num_of_actions = env.action_space.n
+    train_rewards, eval_durations = {}, {}
 
-network = ActorCritic(num_of_observations, layers_dim, num_of_actions, dropout)
+    lr = 3e-2
+    layers_dim = [6, 6]
+    gamma = 1
+    dropout = 0.1
 
-logger.debug("Number of parameters in our model: {}".format(sum(x.numel() for x in network.parameters())))
+    network = ActorCritic(num_of_observations, layers_dim, num_of_actions, dropout)
 
-criterion = torch.nn.MSELoss()
-optimizer = optim.Adam(network.parameters(), lr)
+    logger.debug("Number of parameters in our model: {}".format(sum(x.numel() for x in network.parameters())))
 
-agent = A2C(env.action_space.n, network, criterion, optimizer, gamma)
+    criterion = torch.nn.MSELoss()
+    optimizer = optim.Adam(network.parameters(), lr)
 
-for i_episode in range(cartpole_constants.max_episodes):
-    log_probs, state_values, rewards, max_probs = [], [], [], []
+    agent = A2C(env.action_space.n, network, criterion, optimizer, gamma)
 
-    next_state = env.reset()
+    for i_episode in range(cartpole_constants.max_episodes):
+        log_probs, state_values, rewards, max_probs = [], [], [], []
 
-    done = False
-    train = True
-    agent.train_mode()
-    if (i_episode + 1) % cartpole_constants.EVAL_INTERVAL == 0:
-        train = False
-        agent.eval_mode()
+        next_state = env.reset()
 
-    episode_duration = 0
-    while not done:
-        episode_duration += 1
-        # if not train:
-        #     env.render()
-        state = np.float32(next_state)
-        action, log_prob, state_value, max_prob = agent.choose_action(state, train=train)  # TODO merge train parameter with model_train
-        next_state, reward, done, _ = env.step(action)
+        done = False
+        train = True
+        agent.train_mode()
+        if (i_episode + 1) % cartpole_constants.EVAL_INTERVAL == 0:
+            train = False
+            agent.eval_mode()
 
-        log_probs.append(log_prob)  # even if episode is done we keep the reward and log prop, is this a problem?
-        state_values.append(state_value)
-        rewards.append(reward)
-        max_probs.append(max_prob)  # only needed for monitoring
+        episode_duration = 0
+        while not done:
+            episode_duration += 1
+            # if not train:
+            #     env.render()
+            state = np.float32(next_state)
+            action, log_prob, state_value, max_prob = agent.choose_action(state, train=train)  # TODO merge train parameter with model_train
+            next_state, reward, done, _ = env.step(action)
 
-    episode_reward = sum(rewards)
-    if train:
-        train_rewards[i_episode] = episode_reward
-        discounted_rewards = agent.calculate_rewards(rewards)
-        loss = agent.update(log_probs, state_values, discounted_rewards)
-        if cartpole_constants.TENSORBOARD:
-            writer.add_scalars('Overview/Rewards', {'Train': episode_reward}, i_episode)
-            writer.add_scalar('Overview/Loss', loss, i_episode)
-            writer.add_scalar('Reward/Train', episode_reward, i_episode)
-            writer.add_scalar('Probs/Train', sum(max_probs) / len(max_probs), i_episode)
-            writer.flush()
-            if LOG_WEIGHTS:
-                for name, param in agent.actor_critic_net.named_parameters():
-                    headline, title = name.rsplit(".", 1)
-                    writer.add_histogram(headline + '/' + title, param, i_episode)
-            writer.flush()
+            log_probs.append(log_prob)  # even if episode is done we keep the reward and log prop, is this a problem?
+            state_values.append(state_value)
+            rewards.append(reward)
+            max_probs.append(max_prob)  # only needed for monitoring
 
+        episode_reward = sum(rewards)
+        if train:
+            train_rewards[i_episode] = episode_reward
+            discounted_rewards = agent.calculate_rewards(rewards)
+            loss = agent.update(log_probs, state_values, discounted_rewards)
+            if cartpole_constants.TENSORBOARD:
+                writer.add_scalars('Overview/Rewards', {'Train': episode_reward}, i_episode)
+                writer.add_scalar('Overview/Loss', loss, i_episode)
+                writer.add_scalar('Reward/Train', episode_reward, i_episode)
+                writer.add_scalar('Probs/Train', sum(max_probs) / len(max_probs), i_episode)
+                writer.flush()
+                if LOG_WEIGHTS:
+                    for name, param in agent.actor_critic_net.named_parameters():
+                        headline, title = name.rsplit(".", 1)
+                        writer.add_histogram(headline + '/' + title, param, i_episode)
+                writer.flush()
+
+        else:
+            eval_durations[i_episode] = episode_reward
+            if cartpole_constants.TENSORBOARD:
+                writer.add_scalars('Overview/Rewards', {'Eval': episode_reward}, i_episode)
+                writer.add_scalar('Reward/Eval', episode_reward, i_episode)
+                writer.add_scalar('Probs/Eval', sum(max_probs) / len(max_probs), i_episode)
+                writer.flush()
+            if check_termination(eval_durations):
+                logger.info('Solved after {} episodes.'.format(len(train_rewards)))
+                break
+
+        # plot_durations(train_durations, eval_durations)
     else:
-        eval_durations[i_episode] = episode_reward
-        if cartpole_constants.TENSORBOARD:
-            writer.add_scalars('Overview/Rewards', {'Eval': episode_reward}, i_episode)
-            writer.add_scalar('Reward/Eval', episode_reward, i_episode)
-            writer.add_scalar('Probs/Eval', sum(max_probs) / len(max_probs), i_episode)
-            writer.flush()
-        if check_termination(eval_durations):
-            logger.info('Solved after {} episodes.'.format(len(train_rewards)))
-            break
+        logger.info("Unable to reach goal in {} training episodes.".format(len(train_rewards)))
 
-    # plot_durations(train_durations, eval_durations)
-else:
-    logger.info("Unable to reach goal in {} training episodes.".format(len(train_rewards)))
-
-figure = plot_rewards(train_rewards, eval_durations, completed=True)
+    figure = plot_rewards(train_rewards, eval_durations, completed=True)
 
 
-if cartpole_constants.TENSORBOARD:
-    writer.add_figure('Plot', figure)
+    if cartpole_constants.TENSORBOARD:
+        writer.add_figure('Plot', figure)
 
-    state = np.float32(env.reset())
-    writer.add_graph(agent.actor_critic_net, torch.tensor(state, device=agent.device))
+        state = np.float32(env.reset())
+        writer.add_graph(agent.actor_critic_net, torch.tensor(state, device=agent.device))
 
-    # first dict with hparams, second dict with metrics
-    writer.add_hparams({'lr': lr, 'gamma': gamma, 'HL Dims': str(layers_dim)},
-                       {'episodes_needed': len(train_rewards)})
-    writer.flush()
+        # first dict with hparams, second dict with metrics
+        writer.add_hparams({'lr': lr, 'gamma': gamma, 'HL Dims': str(layers_dim)},
+                           {'episodes_needed': len(train_rewards)})
+        writer.flush()
 
-    writer.close()
-else:
-    plt.show()
+        writer.close()
+    else:
+        plt.show()
 
-env.close()
+    env.close()
