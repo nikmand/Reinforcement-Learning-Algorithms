@@ -28,15 +28,16 @@ class Reinforce(Agent):
         return action.item(), log_prob, probs.max()  # action is a tensor so we return just the number
 
     def update(self, log_probs, discounted_rewards):
-        """  """
+        """ Calculates the loss function for every step of the episode, by calculating the log_prob and the
+         corresponding reward. We then take the sum of those values and we apply backpropagation."""
         policy_loss = []
-        # print(log_probs)
-        # print(discounted_rewards)
         for log_prob, discounted_reward in zip(log_probs, discounted_rewards):
-            policy_loss.append(-log_prob * discounted_reward)
+            policy_loss.append(-log_prob * discounted_reward)  # we add minus to turn score function into loss function
 
         self.optimizer.zero_grad()
-        policy_loss = torch.stack(policy_loss).sum()
+        # transforms a list of single element tensors to a single tensor including all of them
+        policy_loss = torch.stack(policy_loss)
+        policy_loss = policy_loss.sum()
         policy_loss.backward()
         self.optimizer.step()
 
