@@ -25,5 +25,9 @@ EVAL_INTERVAL = 10
 TERM_INTERVAL = 100 // EVAL_INTERVAL
 
 
+def out_of_bounds(cartpole_x_pos):
+    return True if cartpole_x_pos < -2.4 or cartpole_x_pos > 2.4 else False
+
+
 def check_termination(eval_durations):
     return sum(list(eval_durations.values())[-TERM_INTERVAL:]) / TERM_INTERVAL >= 195

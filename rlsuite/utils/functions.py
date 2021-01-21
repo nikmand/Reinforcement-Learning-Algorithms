@@ -2,24 +2,21 @@ import matplotlib.pyplot as plt
 
 
 def plot_epsilon(epsilon):
-    """ """
+    """ Plot exploration probability per episode """
     plt.figure(2)
     plt.clf()
     plt.title('Epsilon...')
     plt.xlabel('Episode')
     plt.ylabel('Epsilon')
-    plt.plot(range(len(epsilon)),epsilon)
+    plt.plot(range(len(epsilon)), epsilon)
     plt.pause(0.001)
 
 
-def plot_rewards(episode_durations, eval_durations, completed=False, means=None):
+def plot_rewards(episode_durations, eval_durations):
     """ """
     figure = plt.figure(1)
     plt.clf()
-    if completed:
-        plt.title('Progress after {} training episodes'.format(len(episode_durations)))
-    else:
-        plt.title('Training...')
+    plt.title('Training...')
     plt.xlabel('Episode')
     plt.ylabel('Reward')
     train_i, train_duration = zip(*episode_durations.items())
@@ -34,3 +31,12 @@ def plot_rewards(episode_durations, eval_durations, completed=False, means=None)
     plt.pause(0.001)  # pause a bit so that plots are updated
 
     return figure
+
+
+def plot_rewards_completed(episode_durations, eval_durations):
+    """  """
+    fig = plot_rewards(episode_durations, eval_durations)
+    plt.title('Progress after {} training episodes'.format(len(episode_durations)))
+
+    return fig
+

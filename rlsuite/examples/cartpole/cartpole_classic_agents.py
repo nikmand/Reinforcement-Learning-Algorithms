@@ -1,7 +1,8 @@
 import gym
 import logging.config
 import matplotlib.pyplot as plt
-from rlsuite.examples.cartpole import cartpole_constants
+from rlsuite.examples.cartpole.cartpole_constants import out_of_bounds, environment, var_freq, LOGGER_PATH, \
+    max_episodes, EVAL_INTERVAL
 from rlsuite.utils.constants import RLAlgorithms
 from rlsuite.utils.quantization import Quantization
 from rlsuite.agents.classic_agents.td_agents import QAgent, DoubleQAgent, SARSAgent
@@ -9,13 +10,13 @@ from rlsuite.utils.functions import plot_rewards
 from itertools import count
 from rlsuite.utils.constants import LOGGER
 
-logging.config.fileConfig(cartpole_constants.LOGGER_PATH)
+logging.config.fileConfig(LOGGER_PATH)
 logger = logging.getLogger(LOGGER)
 
 if __name__ == "__main__":
     """The problem is considered solved when the poll stays upright for over 195 time steps, 100 times consecutively"""
 
-    env = gym.make(cartpole_constants.environment)
+    env = gym.make(environment)
     high_intervals = env.observation_space.high
     low_intervals = env.observation_space.low
     num_of_actions = env.action_space.n
@@ -23,7 +24,7 @@ if __name__ == "__main__":
     logger.debug(high_intervals)
     logger.debug(low_intervals)
 
-    vars_ls = list(zip(low_intervals, high_intervals, cartpole_constants.var_freq))
+    vars_ls = list(zip(low_intervals, high_intervals, var_freq))
     quantizator = Quantization(vars_ls, lambda x: [x[i] for i in [0, 1, 2, 3]])
 
     logger.debug(quantizator.vars_bins)
@@ -46,10 +47,10 @@ if __name__ == "__main__":
     eval_durations = {}
     means = []
 
-    for i_episode in range(cartpole_constants.max_episodes):
+    for i_episode in range(max_episodes):
 
         train = True
-        if (i_episode + 1) % cartpole_constants.EVAL_INTERVAL == 0:
+        if (i_episode + 1) % EVAL_INTERVAL == 0:
             train = False
 
         observation = env.reset()  #
@@ -71,8 +72,8 @@ if __name__ == "__main__":
                     eval_durations[i_episode] = (step + 1)
 
                 plot_rewards(train_durations, eval_durations)
-                if pos < -2.4 or pos > 2.4:
-                    print("Terminated due to position")
+                if out_of_bounds(pos):
+                    logger.debug("Terminated due to position")
                 # print("Episode {} terminated after {} timesteps".format(i_episode, step + 1))
                 break
 
@@ -88,5 +89,4 @@ if __name__ == "__main__":
             pass
 
     env.close()
-
     plt.show()
