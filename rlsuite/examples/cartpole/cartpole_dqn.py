@@ -9,7 +9,7 @@ from rlsuite.utils.memory import Memory, MemoryPER
 from rlsuite.nn.policy_fc import PolicyFC
 from rlsuite.nn.dqn_archs import ClassicDQN, Dueling
 from rlsuite.agents.dqn_agents import DQNAgent, DoubleDQNAgent
-from rlsuite.utils.functions import plot_rewards, plot_rewards_completed, plot_epsilon
+from rlsuite.utils.functions import plot_rewards, plot_rewards_completed, plot_epsilon, log_parameters_histograms
 from rlsuite.utils.constants import LOGGER
 
 TARGET_NET_UPDATE_PERIOD = 100  # target net is updated with the weights of policy net once every 100 updates (steps)
@@ -21,7 +21,7 @@ log = logging.getLogger(LOGGER)
 if __name__ == "__main__":
 
     tensorboard_writer = None
-    if cartpole_constants.TENSORBOARD:
+    if cartpole_constants.USE_TENSORBOARD:
         from torch.utils.tensorboard import SummaryWriter
         tensorboard_writer = SummaryWriter()
 
@@ -69,8 +69,7 @@ if __name__ == "__main__":
     epsilon_at_end_of_each_episode = []
 
     for i_episode in range(cartpole_constants.max_episodes):
-        # DQN paper starts from a partially loaded memory as in the beginning it just collects experiences
-        # memory is not episodic
+
         # Initialize the environment and state
         state = env.reset()
         state = np.float32(state)
@@ -96,6 +95,8 @@ if __name__ == "__main__":
             episode_reward += reward
 
             if memory.tree.n_entries < 500:
+                # DQN paper starts from a partially loaded memory as in the beginning it just collects experiences
+                # memory is not episodic
                 continue
             if train:
                 steps_done += 1
@@ -110,15 +111,13 @@ if __name__ == "__main__":
                 if double and (steps_done % TARGET_NET_UPDATE_PERIOD == 0):
                     # Update the target network, the frequency of the update had crucial impact
                     agent.update_target_net()
-                    if cartpole_constants.TENSORBOARD and LOG_WEIGHTS:
-                        for name, param in agent.target_net.named_parameters():
-                            headline, title = name.rsplit(".", 1)
-                            tensorboard_writer.add_histogram('TargetNet/' + headline + '/' + title, param, i_episode)
-                        tensorboard_writer.flush()
+                    if cartpole_constants.USE_TENSORBOARD:  # and LOG_WEIGHTS
+                        log_parameters_histograms(tensorboard_writer, agent.target_net, i_episode,
+                                                  neural_net_name='TargetNet')
 
         if train:
             train_rewards[i_episode] = episode_reward
-            if cartpole_constants.TENSORBOARD:
+            if cartpole_constants.USE_TENSORBOARD:
                 tensorboard_writer.add_scalar('Agent/Loss', total_loss / episode_duration, i_episode)
                 tensorboard_writer.add_scalar('Agent/Reward Train', episode_reward, i_episode)
                 tensorboard_writer.flush()
@@ -126,18 +125,18 @@ if __name__ == "__main__":
                     for name, param in agent.policy_net.named_parameters():
                         headline, title = name.rsplit(".", 1)
                         tensorboard_writer.add_histogram('PolicyNet/' + headline + '/' + title, param, i_episode)
-                tensorboard_writer.flush()
+                    tensorboard_writer.flush()
 
         else:
             eval_rewards[i_episode] = episode_reward
-            if cartpole_constants.TENSORBOARD:
+            if cartpole_constants.USE_TENSORBOARD:
                 tensorboard_writer.add_scalar('Agent/Reward Eval', episode_reward, i_episode)
                 tensorboard_writer.flush()
             if check_termination(eval_rewards):
                 log.info('Solved after {} episodes.'.format(len(train_rewards)))
                 break
 
-        if cartpole_constants.TENSORBOARD:
+        if cartpole_constants.USE_TENSORBOARD:
             tensorboard_writer.add_scalar('Agent/Epsilon', agent.epsilon, i_episode)
             tensorboard_writer.add_scalar('Agent/Steps', steps_done, i_episode)
             tensorboard_writer.flush()
@@ -151,7 +150,7 @@ if __name__ == "__main__":
 
     figure = plot_rewards_completed(train_rewards, eval_rewards)
     # figure.show()
-    if cartpole_constants.TENSORBOARD:
+    if cartpole_constants.USE_TENSORBOARD:
         tensorboard_writer.add_figure('Plot', figure)
 
         state = np.float32(env.reset())

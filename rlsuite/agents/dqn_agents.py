@@ -13,7 +13,7 @@ class DQNAgent(Agent):
         self.device = 'cpu'  # torch.device("cuda" if torch.cuda.is_available() else "cpu")
         # print(self.device) seems slower with gpu
         self.policy_net = network.to(self.device)
-        self.target_net = copy.deepcopy(self.policy_net)  # if simple DQN target_net initialized but never used
+        self.target_net = copy.deepcopy(self.policy_net)
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.target_net.eval()  # gradient updates never happens in target net
         self.criterion = criterion
@@ -87,7 +87,7 @@ class DQNAgent(Agent):
         """ Progressively decrease the exploration rate """
         # TODO check VDBE-Softmax
         self.epsilon = self.eps_end + (self.eps_start - self.eps_end) * math.exp(-decaying_schedule * self.eps_decay)
-        # this update function is used by the series tutorial in Deep RL
+        # this update function is used by the freeCodeCamp series tutorial in Deep RL
 
     def save_checkpoint(self, filename):
         raise NotImplementedError

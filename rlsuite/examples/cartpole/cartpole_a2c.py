@@ -18,7 +18,7 @@ logger = logging.getLogger(LOGGER)
 
 if __name__ == "__main__":
 
-    writer = SummaryWriter() if cartpole_constants.TENSORBOARD else None
+    writer = SummaryWriter() if cartpole_constants.USE_TENSORBOARD else None
 
     env = gym.make(cartpole_constants.environment)
 
@@ -68,14 +68,14 @@ if __name__ == "__main__":
             log_probs.append(log_prob)  # even if episode is done we keep the reward and log prop, is this a problem?
             state_values.append(state_value)
             rewards.append(reward)
-            max_probs.append(max_prob)  # only needed for monitoring
+            max_probs.append(max_prob)  # only needed for monitoring # what is it's purpose
 
         episode_reward = sum(rewards)
         if train:
             train_rewards[i_episode] = episode_reward
             discounted_rewards = agent.calculate_rewards(rewards)
             loss = agent.update(log_probs, state_values, discounted_rewards)
-            if cartpole_constants.TENSORBOARD:
+            if cartpole_constants.USE_TENSORBOARD:
                 writer.add_scalars('Overview/Rewards', {'Train': episode_reward}, i_episode)
                 writer.add_scalar('Overview/Loss', loss, i_episode)
                 writer.add_scalar('Reward/Train', episode_reward, i_episode)
@@ -89,7 +89,7 @@ if __name__ == "__main__":
 
         else:
             eval_durations[i_episode] = episode_reward
-            if cartpole_constants.TENSORBOARD:
+            if cartpole_constants.USE_TENSORBOARD:
                 writer.add_scalars('Overview/Rewards', {'Eval': episode_reward}, i_episode)
                 writer.add_scalar('Reward/Eval', episode_reward, i_episode)
                 writer.add_scalar('Probs/Eval', sum(max_probs) / len(max_probs), i_episode)
@@ -104,8 +104,7 @@ if __name__ == "__main__":
 
     figure = plot_rewards(train_rewards, eval_durations, completed=True)
 
-
-    if cartpole_constants.TENSORBOARD:
+    if cartpole_constants.USE_TENSORBOARD:
         writer.add_figure('Plot', figure)
 
         state = np.float32(env.reset())

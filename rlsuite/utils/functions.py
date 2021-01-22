@@ -1,6 +1,28 @@
 import matplotlib.pyplot as plt
 
 
+def init_tensorboard(launch_tensorboard):
+    writer = None
+    if launch_tensorboard:
+        from torch.utils.tensorboard import SummaryWriter
+        writer = SummaryWriter()
+    return writer
+
+
+def log_parameters_histograms(tensorboard_writer, neural_net, i_episode, neural_net_name=None):
+    """ Logs in Tensorboard histograms about weights and biases evolution during training."""
+
+    for parameters_name, parameters_values in neural_net.named_parameters():
+        layer_name, parameters_type = parameters_name.rsplit(".", 1)  # parameters_type: weights or biases
+        if neural_net_name:
+            neural_net_name += '/'
+        tensorboard_writer.add_histogram(neural_net_name + layer_name + '/' + parameters_type, parameters_values,
+                                         i_episode)
+    tensorboard_writer.flush()
+
+    return
+
+
 def plot_epsilon(epsilon):
     """ Plot exploration probability per episode """
     plt.figure(2)

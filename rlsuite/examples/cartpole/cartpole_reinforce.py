@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from rlsuite.examples.cartpole import cartpole_constants
 from rlsuite.examples.cartpole.cartpole_constants import check_termination, LOGGER_PATH, LOG_WEIGHTS
 from rlsuite.agents.reinforce_agent import Reinforce
-from rlsuite.utils.functions import plot_rewards
+from rlsuite.utils.functions import plot_rewards_completed, init_tensorboard
 from rlsuite.nn.policy_fc import PolicyFC
 from rlsuite.utils.constants import LOGGER
 
@@ -16,10 +16,7 @@ logger = logging.getLogger(LOGGER)
 
 if __name__ == "__main__":
 
-    writer = None
-    if cartpole_constants.TENSORBOARD:
-        from torch.utils.tensorboard import SummaryWriter
-        writer = SummaryWriter()
+    writer = init_tensorboard(cartpole_constants.USE_TENSORBOARD)
 
     env = gym.make(cartpole_constants.environment)
 
@@ -74,7 +71,7 @@ if __name__ == "__main__":
             train_rewards[i_episode] = episode_reward
             discounted_rewards = agent.calculate_rewards(rewards)
             loss = agent.update(log_probs, discounted_rewards)
-            if cartpole_constants.TENSORBOARD:
+            if cartpole_constants.USE_TENSORBOARD:
                 writer.add_scalars('Overview/Rewards', {'Train': episode_reward}, i_episode)
                 writer.add_scalar('Overview/Loss', loss, i_episode)
                 writer.add_scalar('Reward/Train', episode_reward, i_episode)
@@ -88,7 +85,7 @@ if __name__ == "__main__":
 
         else:
             eval_durations[i_episode] = episode_reward
-            if cartpole_constants.TENSORBOARD:
+            if cartpole_constants.USE_TENSORBOARD:
                 writer.add_scalars('Overview/Rewards', {'Eval': episode_reward}, i_episode)
                 writer.add_scalar('Reward/Eval', episode_reward, i_episode)
                 writer.add_scalar('Probs/Eval', sum(max_probs) / len(max_probs), i_episode)
@@ -101,10 +98,9 @@ if __name__ == "__main__":
     else:
         logger.info("Unable to reach goal in {} training episodes.".format(len(train_rewards)))
 
-    figure = plot_rewards(train_rewards, eval_durations, completed=True)
+    figure = plot_rewards_completed(train_rewards, eval_durations)
 
-
-    if cartpole_constants.TENSORBOARD:
+    if cartpole_constants.USE_TENSORBOARD:
         writer.add_figure('Plot', figure)
 
         state = np.float32(env.reset())
