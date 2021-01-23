@@ -16,7 +16,7 @@ class Agent(ABC):
         #  /= np.sqrt(i_episode + 1)
 
     @abstractmethod
-    def choose_action(self, cur_state, train=True):
+    def choose_action(self, cur_state):
         raise NotImplementedError
 
     @abstractmethod

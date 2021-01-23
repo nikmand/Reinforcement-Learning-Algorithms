@@ -7,10 +7,10 @@ import torch.nn.functional as F
 class Reinforce(Agent):
     """ Implementation of policy gradients agent. Can be used only in episodic environments. """
 
-    def __init__(self, num_of_actions, network, optimizer, gamma=0.999, gpu=False):
+    def __init__(self, num_of_actions, network, optimizer, gamma=0.999, use_gpu=False):
         """  """
         super().__init__(num_of_actions, gamma)
-        self.device = torch.device("cuda" if torch.cuda.is_available() and gpu else "cpu")
+        self.device = torch.device("cuda" if torch.cuda.is_available() and use_gpu else "cpu")
         self.policy_net = network.to(self.device)
         self.optimizer = optimizer
 
