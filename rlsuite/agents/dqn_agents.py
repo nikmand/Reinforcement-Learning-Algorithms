@@ -27,7 +27,7 @@ class DQNAgent(Agent):
     def choose_action(self, state):
         """ Choose an action based on e-greedy if on training mode. """
 
-        if (random.random() < self.epsilon) and self.policy_net.training():
+        if (random.random() < self.epsilon) and self.policy_net.training:
             return random.randrange(self.num_of_actions)
         else:
             with torch.no_grad():
@@ -40,7 +40,7 @@ class DQNAgent(Agent):
 
     def update(self, transitions, is_weights=None):
         """
-        :param is_weights:
+        :param is_weights: importance sampling weights used for PER
         :param transitions: a list whose elements are transitions
         """
 
@@ -55,7 +55,7 @@ class DQNAgent(Agent):
 
         # Compute V(s_{t+1}) for all next states.
         next_state_values = self._compute_next_state_values(next_states)
-        # Compute the expected Q values
+        # Compute the expected Q targets
         expected_q_values = rewards + (1 - done.int()) * self.gamma * next_state_values
         # we want to take into account next states' values only if they are not final states
         predicted_q_values = predicted_q_values.squeeze(1)
@@ -78,10 +78,10 @@ class DQNAgent(Agent):
 
         return loss, errors
 
-    def _compute_next_state_values(self, next_state):
-        """   """
+    def _compute_next_state_values(self, next_states):
+        """ next_states batch is passed to the target net. The max value is returned for each entry."""
 
-        next_state_values = self.target_net(next_state).max(1)[0]
+        next_state_values = self.target_net(next_states).max(1)[0]
 
         return next_state_values
 
@@ -111,18 +111,19 @@ class DQNAgent(Agent):
         self.policy_net.eval()
 
 
-class DoubleDQNAgent(DQNAgent):
-    """  """
+class DDQNAgent(DQNAgent):
+    """ Implementation of  Double DQN. The selection of the action is disconnected from the estimation of its value. """
 
     def __init__(self, num_of_actions, network, criterion, optimizer, gamma=0.99, eps_decay=0.0005, eps_start=1,
                  eps_end=0.01):
         super().__init__(num_of_actions, network, criterion, optimizer, gamma, eps_decay, eps_start, eps_end)
 
-    def _compute_next_state_values(self, next_state):
-        """ """
+    def _compute_next_state_values(self, next_states):
+        """ next_states batch is passed to policy_net and the actions that give the max value are selected.
+         Then the batch is passed also to target_net and we return the values that correspond to the actions selected
+          by the policy_net. """
 
-        policy_actions = self.policy_net(next_state).max(1)[1]
-        next_state_values = self.target_net(next_state).gather(1, policy_actions.unsqueeze(1))
+        policy_actions = self.policy_net(next_states).max(1)[1]
+        next_state_values = self.target_net(next_states).gather(1, policy_actions.unsqueeze(1))
 
         return next_state_values.squeeze(1)
-

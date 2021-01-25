@@ -8,7 +8,7 @@ from rlsuite.examples.cartpole.cartpole_constants import check_termination, LOGG
 from rlsuite.utils.memory import Memory, MemoryPER
 from rlsuite.nn.policy_fc import PolicyFC
 from rlsuite.nn.dqn_archs import ClassicDQN, Dueling
-from rlsuite.agents.dqn_agents import DQNAgent, DoubleDQNAgent
+from rlsuite.agents.dqn_agents import DQNAgent, DDQNAgent
 from rlsuite.utils.functions import plot_rewards, plot_rewards_completed, plot_epsilon, log_parameters_histograms
 from rlsuite.utils.constants import LOGGER
 
@@ -25,6 +25,8 @@ if __name__ == "__main__":
         from torch.utils.tensorboard import SummaryWriter
         tensorboard_writer = SummaryWriter()
 
+    # TODO name of experiment can be formed to include hparams
+
     env = gym.make(cartpole_constants.environment)
     num_of_observations = env.observation_space.shape[0]
     num_of_actions = env.action_space.n
@@ -37,6 +39,9 @@ if __name__ == "__main__":
     mem_size = 15_000
 
     dueling = True  # Classic and Dueling DQN architectures are supported
+    per = True
+    double = True
+
     if dueling:
         dqn_arch = Dueling
 
@@ -50,17 +55,16 @@ if __name__ == "__main__":
     criterion = torch.nn.MSELoss(reduction='none')  # torch.nn.SmoothL1Loss()  # Huber loss
     optimizer = optim.Adam(network.parameters(), lr)
     # scheduler = ReduceLROnPlateau(optimizer, factor=0.9, patience=20)  # not used in update for now
-    # ExponentialLR(optimizer, lr_deacy)  # alternative scheduler
+    # ExponentialLR(optimizer, lr_decay)  # alternative scheduler
     # scheduler will reduce the lr by the specified factor when metric has stopped improving
-    per = True
+
     if per:
         memory = MemoryPER(mem_size)
     else:
         memory = Memory(mem_size)
 
-    double = True
     if double:
-        agent = DoubleDQNAgent(num_of_actions, network, criterion, optimizer, gamma, eps_decay, eps_start, eps_end)
+        agent = DDQNAgent(num_of_actions, network, criterion, optimizer, gamma, eps_decay, eps_start, eps_end)
     else:
         agent = DQNAgent(num_of_actions, network, criterion, optimizer, gamma, eps_decay, eps_start, eps_end)
 
@@ -73,22 +77,25 @@ if __name__ == "__main__":
         # Initialize the environment and state
         state = env.reset()
         state = np.float32(state)
+
+        episode_duration = 0
+        episode_reward = 0
+        episode_loss = 0
+
         done = False
         train = True
         agent.train_mode()
+
         if (i_episode + 1) % cartpole_constants.EVAL_INTERVAL == 0:
             train = False
             agent.eval_mode()
 
-        episode_duration = 0
-        episode_reward = 0
-        total_loss = 0
         while not done:
             episode_duration += 1
             # if not train:
             #     env.render()
-            action = agent.choose_action(state, train=train)
-            next_state, reward, done, _ = env.step(action)  # maybe training can run in parallel with sleep
+            action = agent.choose_action(state)
+            next_state, reward, done, _ = env.step(action)
             next_state = np.float32(next_state)
             memory.store(state, action, next_state, reward, done)  # Store the transition in memory
             state = next_state
@@ -96,7 +103,7 @@ if __name__ == "__main__":
 
             if memory.tree.n_entries < 500:
                 # DQN paper starts from a partially loaded memory as in the beginning it just collects experiences
-                # memory is not episodic
+                # we do nothing until we collect a number of experiences
                 continue
             if train:
                 steps_done += 1
@@ -105,27 +112,23 @@ if __name__ == "__main__":
                 except ValueError:
                     continue
                 loss, errors = agent.update(transitions, is_weights)  # Perform one step of optimization on the policy net
-                total_loss += loss
+                episode_loss += loss
                 agent.adjust_exploration(steps_done)  # rate is updated at every step - taken from the tutorial
                 memory.batch_update(indices, errors)
-                if double and (steps_done % TARGET_NET_UPDATE_PERIOD == 0):
+                if steps_done % TARGET_NET_UPDATE_PERIOD == 0:
                     # Update the target network, the frequency of the update had crucial impact
                     agent.update_target_net()
-                    if cartpole_constants.USE_TENSORBOARD:  # and LOG_WEIGHTS
-                        log_parameters_histograms(tensorboard_writer, agent.target_net, i_episode,
-                                                  neural_net_name='TargetNet')
+                    if cartpole_constants.USE_TENSORBOARD and LOG_WEIGHTS:
+                        log_parameters_histograms(tensorboard_writer, agent.target_net, i_episode, 'TargetNet')
 
         if train:
             train_rewards[i_episode] = episode_reward
             if cartpole_constants.USE_TENSORBOARD:
-                tensorboard_writer.add_scalar('Agent/Loss', total_loss / episode_duration, i_episode)
+                tensorboard_writer.add_scalar('Agent/Loss', episode_loss / episode_duration, i_episode)
                 tensorboard_writer.add_scalar('Agent/Reward Train', episode_reward, i_episode)
                 tensorboard_writer.flush()
                 if LOG_WEIGHTS:
-                    for name, param in agent.policy_net.named_parameters():
-                        headline, title = name.rsplit(".", 1)
-                        tensorboard_writer.add_histogram('PolicyNet/' + headline + '/' + title, param, i_episode)
-                    tensorboard_writer.flush()
+                    log_parameters_histograms(tensorboard_writer, agent.policy_net, i_episode, 'PolicyNet')
 
         else:
             eval_rewards[i_episode] = episode_reward
