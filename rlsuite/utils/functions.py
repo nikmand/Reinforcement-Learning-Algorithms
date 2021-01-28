@@ -1,4 +1,12 @@
 import matplotlib.pyplot as plt
+import configparser
+
+
+def config_parser(filename):
+    config = configparser.ConfigParser()
+    config.read(filename)
+
+    return config['env'], config['agent'], config['misc']
 
 
 def init_tensorboard(launch_tensorboard):

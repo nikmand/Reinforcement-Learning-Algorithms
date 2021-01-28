@@ -16,7 +16,7 @@ class Dueling(nn.Module):
 
     def __init__(self, output_dim, actions_dim):
         super().__init__()
-        # TODO consider refactoring the network arch, streams can consist of more layers
+        # TODO consider refactoring the network arch, streams' layers should be configurable
         self.value_stream = nn.Sequential(
             # nn.Linear(output_dim, 12),
             # nn.Dropout(p=0.1),

@@ -1,23 +1,38 @@
 import numpy as np
 from abc import ABC, abstractmethod
+
+from rlsuite.nn.dqn_archs import Dueling, ClassicDQN
+from rlsuite.utils.constants import *
 from rlsuite.utils.functions import log_parameters_histograms
+from rlsuite.utils.memory import MemoryPER, Memory
 
 
 class Trainer(ABC):
     """  """
 
-    def __init__(self, agent, env, memory, config, writer=None):
+    def __init__(self, env, agent, config, writer=None):
 
+        # TODO agent and memory algorithms should be specified and their creation should happen here
         self.env = env
-        self.agent = agent
-        self.memory = memory
-
         self.writer = writer
 
+        if config[MEM_PER] == 'per':
+            memory = MemoryPER(config["mem_size"])
+        else:
+            memory = Memory(config["mem_size"])
+
+        if config[ARCH] == 'dueling':
+            dqn_arch = Dueling
+        else:
+            dqn_arch = ClassicDQN
+
+
+
+        self.memory = memory
         self.max_episodes = config["max_ep"]
         self.eval_interval = config["eval_interval"]
         # TODO ckeck if evaluation is needed
-        self.target_update_period = config[TARGET_NET_UPDATE_PERIOD]
+        self.target_update_period = config["target_update"]
         self.batch_size = config["batch"]
         self.render = config["render"]
 
@@ -31,18 +46,21 @@ class Trainer(ABC):
 
         return should_update_target_net
 
-    def _tensorboard_write_scalars(self):
-        """  """
-        if self.writer:
-            self.writer.add_scalar('Agent/Loss', episode_loss / episode_duration, i_episode)
-            self.writer.add_scalar('Agent/Reward Train', episode_reward, i_episode)
-            self.writer.add_scalar('Agent/Epsilon', self.agent.epsilon, i_episode)
-            self.writer.add_scalar('Agent/Steps', steps_done, i_episode)
-            self.writer.flush()
+    # def _tensorboard_write_scalars(self):
+    #     """  """
+    #     if self.writer:
+    #         self.writer.add_scalar('Agent/Loss', episode_loss / episode_duration, i_episode)
+    #         self.writer.add_scalar('Agent/Reward Train', episode_reward, i_episode)
+    #         self.writer.add_scalar('Agent/Epsilon', self.agent.epsilon, i_episode)
+    #         self.writer.add_scalar('Agent/Steps', steps_done, i_episode)
+    #         self.writer.flush()
 
-    def _tensorboard_write_hparams(self, hparams, metrics):
-        """  """
-        
+    def _tensorboard_write_hparams(self, hyperparams, metrics):
+        """
+         :param hyperparams: Hyper-parameters of the experiment
+         :param metrics: Metrics based on which we evaluate the experiment
+         """
+
         # first dict with hparams, second dict with evaluation metrics
 
         # {'lr': lr, 'gamma': gamma, 'HL Dims': str(layers_dim), 'Double': double, 'Dueling': dueling,
@@ -51,7 +69,7 @@ class Trainer(ABC):
 
         # {'episodes_needed': len(train_rewards)}
 
-        self.writer.add_hparams(hparams, metrics)
+        self.writer.add_hparams(hyperparams, metrics)
         self.writer.flush()
 
     def _forward_step(self, episode_duration, state, episode_reward):
@@ -109,20 +127,20 @@ class Trainer(ABC):
                 self._backward_step(steps_done, episode_loss)
 
             train_rewards[i_episode] = episode_reward
-            self._tensorboard_write_scalars()
-            if LOG_WEIGHTS:
-                log_parameters_histograms(tensorboard_writer, self.agent.policy_net, i_episode, 'PolicyNet')
-
-        figure = plot_rewards_completed(train_rewards, eval_rewards)
+            # self._tensorboard_write_scalars()
+        #     if LOG_WEIGHTS:
+        #         log_parameters_histograms(tensorboard_writer, self.agent.policy_net, i_episode, 'PolicyNet')
+        #
+        # figure = plot_rewards_completed(train_rewards, eval_rewards)
         # figure.show()
-        if cartpole_constants.USE_TENSORBOARD:
-            tensorboard_writer.add_figure('Plot', figure)
-
-            state = np.float32(env.reset())
-            tensorboard_writer.add_graph(agent.policy_net, torch.tensor(state, device=agent.device))
-
-            self._tensorboard_write_hparams()
-            tensorboard_writer.close()
+        # if cartpole_constants.USE_TENSORBOARD:
+        #     tensorboard_writer.add_figure('Plot', figure)
+        #
+        #     state = np.float32(env.reset())
+        #     tensorboard_writer.add_graph(agent.policy_net, torch.tensor(state, device=agent.device))
+        #
+        #     self._tensorboard_write_hparams()
+        #     tensorboard_writer.close()
 
     def eval_step(self):
         self.agent.eval_mode()
@@ -130,8 +148,7 @@ class Trainer(ABC):
 
     def run(self):
 
-
-            self.train_step()
+        self.train_step()
 
 
 
