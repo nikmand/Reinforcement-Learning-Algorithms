@@ -2,7 +2,7 @@ import torch.nn as nn
 
 
 class ActorCritic(nn.Module):
-
+    """  """
     def __init__(self, features_dim, layers_dim, actions_dim, dropout=0.1):
         super().__init__()
         layers_in = [features_dim] + layers_dim[:-1]
@@ -18,6 +18,7 @@ class ActorCritic(nn.Module):
         self.value_head = nn.Linear(output_dim, 1)
 
     def forward(self, x):
+        """  """
         x = self.layers(x)
 
         action_logits = self.action_head(x)

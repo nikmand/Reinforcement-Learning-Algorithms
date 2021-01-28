@@ -3,6 +3,7 @@ import torch.nn as nn
 
 
 class ClassicDQN(nn.Module):
+    """ Vanilla implementation of DQN. A single stream is used to estimate the action value function Q(s,a). """
 
     def __init__(self, output_dim, actions_dim):
         super().__init__()
@@ -13,6 +14,8 @@ class ClassicDQN(nn.Module):
 
 
 class Dueling(nn.Module):
+    """ The action value function Q(s,a) can be decomposed to state value V(s) and advantage A(s,a) for each action.
+    With Dueling, we want to separate the estimation of V(s) and A(s,a) by using two streams. """
 
     def __init__(self, output_dim, actions_dim):
         super().__init__()
@@ -34,6 +37,8 @@ class Dueling(nn.Module):
         )
 
     def forward(self, x):
+        """ The outcome of the first layers of the neural net is passed to both the value and advantage stream.
+        Then the results of the two streams are merged and the action value function Q(s,a) is returned. """
         values = self.value_stream(x)
         advantages = self.advantage_stream(x)
 
