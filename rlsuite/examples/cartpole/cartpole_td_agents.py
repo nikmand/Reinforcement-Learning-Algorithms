@@ -27,7 +27,7 @@ if __name__ == "__main__":
     vars_ls = list(zip(low_intervals, high_intervals, var_freq))
     quantizator = Quantization(vars_ls, lambda x: [x[i] for i in [0, 1, 2, 3]])
 
-    logger.debug(quantizator.vars_bins)
+    logger.debug(quantizator.dimensions_bins)
 
     algorithm = RLAlgorithms.DOUBLE_Q_LEARNING
 

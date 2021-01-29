@@ -4,14 +4,13 @@ from rlsuite.examples.cartpole.cartpole_constants import check_termination, LOGG
 from rlsuite.agents.classic_agents.mc_agent import MCAgent
 import logging.config
 from rlsuite.utils.quantization import Quantization
-from rlsuite.utils.functions import plot_rewards
+from rlsuite.utils.functions import plot_rewards, plot_rewards_completed
 import matplotlib.pyplot as plt
 from rlsuite.utils.constants import LOGGER
 
 # COMMENT it seems that monte carlo has high variance maybe we should reduce exploration
 logging.config.fileConfig(LOGGER_PATH)
 logger = logging.getLogger(LOGGER)
-
 if __name__ == "__main__":
 
     env = gym.make(cartpole_constants.environment)
@@ -20,11 +19,14 @@ if __name__ == "__main__":
 
     num_of_actions = env.action_space.n
 
-    high_intervals = env.observation_space.high
-    low_intervals = env.observation_space.low
+    dimensions_high_barriers = env.observation_space.high
+    dimensions_low_barriers = env.observation_space.low
 
-    vars_ls = list(zip(low_intervals, high_intervals, cartpole_constants.var_freq))
-    quantizator = Quantization(vars_ls, lambda x: [x[i] for i in [0, 1, 2, 3]])
+    # if we want to exclude one dimension we can set freq=1
+
+    dimensions_description = list(zip(dimensions_low_barriers, dimensions_high_barriers, cartpole_constants.var_freq))
+
+    quantizator = Quantization(dimensions_description)
 
     agent = MCAgent(num_of_actions, quantizator.dimensions)
 
@@ -65,6 +67,6 @@ if __name__ == "__main__":
     else:
         logger.info("Unable to reach goal in {} training episodes.".format(len(train_durations)))
 
-    plot_rewards(train_durations, eval_durations, completed=True)
+    plot_rewards_completed(train_durations, eval_durations)
     env.close()
     plt.show()
