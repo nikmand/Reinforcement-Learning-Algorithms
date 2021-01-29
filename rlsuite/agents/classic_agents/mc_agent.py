@@ -1,29 +1,19 @@
 import numpy as np
 import random
 from statistics import mean, stdev
-from rlsuite.agents.agent import Agent
+from rlsuite.agents.classic_agents.classic_agent import ClassicAgent
 
 
-class MCAgent(Agent):
+class MCAgent(ClassicAgent):
     """ Implementation of Monte carlo without exploration start. The simulation starts from the same point every time
      and we explore the action space by using e-greedy. """
 
     def __init__(self, num_of_actions, dimensions, gamma=0.999, epsilon=1):
         """
         """
-        super().__init__(num_of_actions, gamma, epsilon)
-        self.num_of_actions = num_of_actions
-        # q_table has the dimensions of each variable (state) and an extra one for every possible action from each state
-        self.q_table = np.zeros(dimensions + [num_of_actions])
+        super().__init__(num_of_actions, dimensions, gamma, epsilon)
         # we keep the number of times that we have visited each Q(s, a)
         self.num_of_visits = np.zeros(dimensions + [num_of_actions])
-
-    def choose_action(self, cur_state, train=True):
-        """"""
-        if random.uniform(0, 1) < self.epsilon and train:
-            return random.randrange(self.num_of_actions)
-        else:
-            return np.argmax(self.q_table[cur_state])
 
     def update(self, state_action_ls, rewards):
         """ This method runs at the end of every episode. We take into consideration only the first time that we
@@ -43,6 +33,7 @@ class MCAgent(Agent):
                 visited_states.add((tuple(state), action))
 
     def calculate_rewards(self, rewards):
+        """  """
         discounted_rewards = []
         value = 0
 
@@ -56,9 +47,3 @@ class MCAgent(Agent):
         # is it needed to standarize the values? the effect doesn't seem so important
 
         return discounted_rewards
-
-    def load_checkpoint(self, filename):
-        raise NotImplementedError
-
-    def save_checkpoint(self, filename):
-        raise NotImplementedError

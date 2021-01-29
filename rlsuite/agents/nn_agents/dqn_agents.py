@@ -99,10 +99,7 @@ class DQNAgent(Agent):
         # this update function is used by the freeCodeCamp series tutorial in Deep RL
 
     def save_checkpoint(self, filename):
-        raise NotImplementedError
-
-    def load_checkpoint(self, filename):
-        raise NotImplementedError
+        self.policy_net.save_checkpoint(filename)
 
     def train_mode(self):
         self.policy_net.train()

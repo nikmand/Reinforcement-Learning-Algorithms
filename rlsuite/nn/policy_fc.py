@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 from rlsuite.nn.dqn_archs import ClassicDQN
 
@@ -22,3 +23,6 @@ class PolicyFC(nn.Module):
         x = self.dqn_arch_layers(fc_outputs)
 
         return x
+
+    def save_checkpoint(self, filename):
+        torch.save(self.state_dict(), filename)

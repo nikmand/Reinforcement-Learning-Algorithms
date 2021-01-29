@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from rlsuite.examples.cartpole import cartpole_constants
 from rlsuite.examples.cartpole.cartpole_constants import check_termination, LOGGER_PATH, LOG_WEIGHTS
-from rlsuite.agents.reinforce_agent import Reinforce
+from rlsuite.agents.nn_agents.reinforce_agent import Reinforce
 from rlsuite.utils.functions import plot_rewards_completed, init_tensorboard
 from rlsuite.nn.policy_fc import PolicyFC
 from rlsuite.utils.constants import LOGGER

@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from rlsuite.examples.cartpole import cartpole_constants
 from rlsuite.examples.cartpole.cartpole_constants import check_termination, LOGGER_PATH, LOG_WEIGHTS
-from rlsuite.agents.a2c_agent import A2C
+from rlsuite.agents.nn_agents.a2c_agent import A2C
 from rlsuite.utils.functions import plot_rewards
 from rlsuite.nn.actor_critic import ActorCritic
 from torch.utils.tensorboard import SummaryWriter

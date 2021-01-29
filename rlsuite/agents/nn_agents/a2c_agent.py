@@ -74,5 +74,3 @@ class A2C(Agent):
     def save_checkpoint(self, filename):
         raise NotImplementedError
 
-    def load_checkpoint(self, filename):
-        raise NotImplementedError

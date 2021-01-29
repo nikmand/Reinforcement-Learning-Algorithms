@@ -2,13 +2,12 @@ import torch
 import logging.config
 import torch.optim as optim
 import gym
-import numpy as np
 from rlsuite.examples.cartpole import cartpole_constants
-from rlsuite.examples.cartpole.cartpole_constants import check_termination, LOGGER_PATH, LOG_WEIGHTS
+from rlsuite.examples.cartpole.cartpole_constants import LOGGER_PATH
 from rlsuite.utils.memory import Memory, MemoryPER
 from rlsuite.nn.policy_fc import PolicyFC
 from rlsuite.nn.dqn_archs import ClassicDQN, Dueling
-from rlsuite.agents.dqn_agents import DQNAgent, DDQNAgent
+from rlsuite.agents.nn_agents.dqn_agents import DQNAgent, DDQNAgent
 from rlsuite.utils.constants import LOGGER
 from rlsuite.trainers.trainer import Trainer
 

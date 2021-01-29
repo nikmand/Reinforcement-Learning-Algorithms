@@ -8,7 +8,7 @@ from rlsuite.examples.cartpole.cartpole_constants import check_termination, LOGG
 from rlsuite.utils.memory import Memory, MemoryPER
 from rlsuite.nn.policy_fc import PolicyFC
 from rlsuite.nn.dqn_archs import ClassicDQN, Dueling
-from rlsuite.agents.dqn_agents import DQNAgent, DDQNAgent
+from rlsuite.agents.nn_agents.dqn_agents import DQNAgent, DDQNAgent
 from rlsuite.utils.functions import plot_rewards, plot_rewards_completed, plot_epsilon, log_parameters_histograms
 from rlsuite.utils.constants import LOGGER
 
@@ -44,7 +44,6 @@ if __name__ == "__main__":
 
     if dueling:
         dqn_arch = Dueling
-
     else:
         dqn_arch = ClassicDQN
 
