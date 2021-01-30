@@ -3,6 +3,8 @@ import numpy as np
 from rlsuite.utils.sumtree import SumTree
 from collections import deque
 
+# TODO consider if we need to reorganize this classes
+
 
 class Memory:
 
@@ -51,7 +53,7 @@ class MemoryPER:  # stored as ( s, a, r, s_ ) in SumTree
     def store(self, *experience):
         """
         Store a new experience in our tree
-        Each new experience have a score of max_prority (it will be then improved when we use this exp to train our DDQN)
+        Each new experience have a score of max_prority (By training it will be improved)
         """
         # Find the max priority
         max_priority = np.max(self.tree.tree[-self.tree.capacity:])  # max priority of the leaves
@@ -64,20 +66,19 @@ class MemoryPER:  # stored as ( s, a, r, s_ ) in SumTree
         # print(max_priority)
         self.tree.add(max_priority, experience)  # set the max p for new p
 
-    def sample(self, n):
+    def sample(self, batch_size):
         """
-        n: size of batch
         - First, to sample a minibatch of n size, the range [0, priority_total] is / into n ranges.
         - Then a value is uniformly sampled from each range
         - We search in the sumtree, the experience where priority score correspond to sample values are retrieved from.
         - Then, we calculate IS weights for each minibatch element
         """
-        if self.tree.n_entries < n:
+        if self.tree.n_entries < batch_size:
             raise ValueError()
 
         # Calculate the priority segment
         # Here, as explained in the paper, we divide the Range[0, ptotal] into n ranges
-        priority_segment = self.tree.total_priority / n  # priority segment
+        priority_segment = self.tree.total_priority / batch_size  # priority segment
 
         # Here we increasing the PER_b each time we sample a new minibatch
         self.PER_b = np.min([1., self.PER_b + self.PER_b_increment_per_sampling])  # max = 1
@@ -88,7 +89,7 @@ class MemoryPER:  # stored as ( s, a, r, s_ ) in SumTree
         p_min = np.min(leaves[np.nonzero(leaves)]) / self.tree.total_priority
         max_weight = np.power(p_min * self.tree.n_entries, -self.PER_b)
 
-        values = [self.tree.get_leaf(np.random.uniform(priority_segment * i, priority_segment * (i + 1))) for i in range(n)]
+        values = [self.tree.get_leaf(np.random.uniform(priority_segment * i, priority_segment * (i + 1))) for i in range(batch_size)]
         indices, priorities, transitions = zip(*values)
         sampling_probabilities = priorities / self.tree.total_priority
         is_weights = np.power(self.tree.n_entries * sampling_probabilities, -self.PER_b)

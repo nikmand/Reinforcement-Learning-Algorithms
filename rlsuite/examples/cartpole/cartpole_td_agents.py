@@ -14,18 +14,17 @@ logging.config.fileConfig(LOGGER_PATH)
 logger = logging.getLogger(LOGGER)
 
 if __name__ == "__main__":
-    """The problem is considered solved when the poll stays upright for over 195 time steps, 100 times consecutively"""
 
     env = gym.make(environment)
-    high_intervals = env.observation_space.high
-    low_intervals = env.observation_space.low
+    dimensions_high_barriers = env.observation_space.high
+    dimensions_low_barriers = env.observation_space.low
     num_of_actions = env.action_space.n
 
-    logger.debug(high_intervals)
-    logger.debug(low_intervals)
+    logger.debug(dimensions_high_barriers)
+    logger.debug(dimensions_low_barriers)
 
-    vars_ls = list(zip(low_intervals, high_intervals, var_freq))
-    quantizator = Quantization(vars_ls, lambda x: [x[i] for i in [0, 1, 2, 3]])
+    dimensions_description = list(zip(dimensions_low_barriers, dimensions_high_barriers, var_freq))
+    quantizator = Quantization(dimensions_description)
 
     logger.debug(quantizator.dimensions_bins)
 
@@ -64,15 +63,15 @@ if __name__ == "__main__":
             # env.render()
             observation, reward, done, info = env.step(action)  # takes the specified action
             if done:
-                pos = observation[0]
-                rot = observation[2]
+                position = observation[0]
+                rotation = observation[2]
                 if train:
                     train_durations[i_episode] = (step + 1)
                 else:
                     eval_durations[i_episode] = (step + 1)
 
                 plot_rewards(train_durations, eval_durations)
-                if out_of_bounds(pos):
+                if out_of_bounds(position):
                     logger.debug("Terminated due to position")
                 # print("Episode {} terminated after {} timesteps".format(i_episode, step + 1))
                 break

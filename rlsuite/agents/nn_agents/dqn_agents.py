@@ -14,15 +14,22 @@ class DQNAgent(Agent):
         super().__init__(num_of_actions, gamma, epsilon=1)
         self.device = torch.device("cuda" if torch.cuda.is_available() and use_gpu else "cpu")
         self.policy_net = network.to(self.device)
-        self.target_net = copy.deepcopy(self.policy_net)
-        self.target_net.load_state_dict(self.policy_net.state_dict())
-        self.target_net.eval()  # gradient updates never happens in target net
+        self.target_net = self._init_target_net()
         self.criterion = criterion
         self.optimizer = optimizer
         # self.scheduler = scheduler
         self.eps_decay = eps_decay
         self.eps_start = eps_start
         self.eps_end = eps_end
+
+    def _init_target_net(self):
+        """ Create a net of same specifications as policy net and initialize it with the same weights as well. """
+
+        target_net = copy.deepcopy(self.policy_net)
+        target_net.load_state_dict(self.policy_net.state_dict())
+        target_net.eval()  # gradient updates never happens in target net
+
+        return target_net
 
     def choose_action(self, state):
         """ Choose an action based on e-greedy if on training mode. """
