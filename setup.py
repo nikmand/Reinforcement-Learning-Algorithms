@@ -1,5 +1,5 @@
 # from distutils.core import setup
-from setuptools import setup, find_namespace_packages
+from setuptools import setup, find_namespace_packages, find_packages
 
 with open('README.md', 'r') as long_desc_file:
     long_description = long_desc_file.read()
@@ -10,7 +10,7 @@ setup(
     maintainer='Nikiforos Mandilaras',
     maintainer_email='nikmand@outlook.com',
     package_dir={'': 'rlsuite'},
-    packages=find_namespace_packages(),
+    packages=find_packages(where='rlsuite'),
     url='https://github.com/nikmand/Reinforcement-Learning-Library',
     license='',
     description='Implementation of Reinforcement Learning Algorithms',
@@ -26,7 +26,3 @@ setup(
         'Programming Language :: Python :: 3 :: Only'
     ]
 )
-
-
-""" include=['rlsuite.examples', 'rlsuite.agents', 'rlsuite.nn', 'rlsuite.utils',
-                                               'rlsuite.agents.classic_agents'] """
