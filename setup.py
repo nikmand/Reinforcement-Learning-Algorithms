@@ -9,9 +9,8 @@ setup(
     version='1.0.0',
     maintainer='Nikiforos Mandilaras',
     maintainer_email='nikmand@outlook.com',
-    #package_dir={'': 'rlsuite'},
-    packages=find_namespace_packages(include=['rlsuite.examples', 'rlsuite.agents', 'rlsuite.nn', 'rlsuite.utils',
-                                               'rlsuite.agents.classic_agents']),
+    package_dir={'': 'rlsuite'},
+    packages=find_namespace_packages(),
     url='https://github.com/nikmand/Reinforcement-Learning-Library',
     license='',
     description='Implementation of Reinforcement Learning Algorithms',
@@ -27,3 +26,7 @@ setup(
         'Programming Language :: Python :: 3 :: Only'
     ]
 )
+
+
+""" include=['rlsuite.examples', 'rlsuite.agents', 'rlsuite.nn', 'rlsuite.utils',
+                                               'rlsuite.agents.classic_agents'] """
