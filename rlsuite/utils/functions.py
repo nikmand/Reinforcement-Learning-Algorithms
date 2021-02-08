@@ -5,6 +5,7 @@ import configparser
 def config_parser(filename):
     config = configparser.ConfigParser()
     config.read(filename)
+    # TODO add a warning if file is not found
 
     return config['env'], config['agent'], config['misc']
 

@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 
-class ClassicDQN(nn.Module):
+class VanillaDQN(nn.Module):
     """ Vanilla implementation of DQN. A single stream is used to estimate the action value function Q(s,a). """
 
     def __init__(self, output_dim, actions_dim):

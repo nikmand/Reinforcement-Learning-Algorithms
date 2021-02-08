@@ -6,7 +6,7 @@ from rlsuite.examples.cartpole import cartpole_constants
 from rlsuite.examples.cartpole.cartpole_constants import LOGGER_PATH
 from rlsuite.utils.memory import Memory, MemoryPER
 from rlsuite.nn.policy_fc import PolicyFC
-from rlsuite.nn.dqn_archs import ClassicDQN, Dueling
+from rlsuite.nn.dqn_archs import VanillaDQN, Dueling
 from rlsuite.agents.nn_agents.dqn_agents import DQNAgent, DDQNAgent
 from rlsuite.utils.constants import LOGGER
 from rlsuite.trainers.trainer import Trainer
@@ -37,7 +37,7 @@ if __name__ == "__main__":
     if dueling:
         dqn_arch = Dueling
     else:
-        dqn_arch = ClassicDQN
+        dqn_arch = VanillaDQN
 
     network = PolicyFC(num_of_observations, layers_dim, num_of_actions, dqn_arch, dropout)
 

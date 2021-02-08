@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from rlsuite.examples.cartpole import cartpole_constants
 from rlsuite.examples.cartpole.cartpole_constants import check_termination, LOGGER_PATH, LOG_WEIGHTS
-from rlsuite.agents.nn_agents.reinforce_agent import Reinforce
+from rlsuite.agents.nn_agents.policy_gradients_agent import PolicyGradients
 from rlsuite.utils.functions import plot_rewards_completed, init_tensorboard
 from rlsuite.nn.policy_fc import PolicyFC
 from rlsuite.utils.constants import LOGGER
@@ -39,7 +39,7 @@ if __name__ == "__main__":
 
     optimizer = optim.Adam(network.parameters(), lr)
 
-    agent = Reinforce(env.action_space.n, network, optimizer, gamma)
+    agent = PolicyGradients(env.action_space.n, network, optimizer, gamma)
 
     for i_episode in range(cartpole_constants.max_episodes):
         log_probs, rewards, max_probs = [], [], []

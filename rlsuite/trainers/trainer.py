@@ -1,7 +1,7 @@
 import numpy as np
 from abc import ABC, abstractmethod
 
-from rlsuite.nn.dqn_archs import Dueling, ClassicDQN
+from rlsuite.nn.dqn_archs import Dueling, VanillaDQN
 from rlsuite.utils.constants import *
 from rlsuite.utils.functions import log_parameters_histograms
 from rlsuite.utils.memory import MemoryPER, Memory
@@ -24,7 +24,7 @@ class Trainer(ABC):
         if config[ARCH] == 'dueling':
             dqn_arch = Dueling
         else:
-            dqn_arch = ClassicDQN
+            dqn_arch = VanillaDQN
 
 
 
@@ -133,6 +133,7 @@ class Trainer(ABC):
         #
         # figure = plot_rewards_completed(train_rewards, eval_rewards)
         # figure.show()
+
         # if cartpole_constants.USE_TENSORBOARD:
         #     tensorboard_writer.add_figure('Plot', figure)
         #

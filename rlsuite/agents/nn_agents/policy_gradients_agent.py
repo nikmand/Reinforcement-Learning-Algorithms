@@ -4,7 +4,7 @@ from torch.distributions import Categorical
 import torch.nn.functional as F
 
 
-class Reinforce(Agent):
+class PolicyGradients(Agent):  # a.k.a. Reinforce
     """ Implementation of policy gradients agent. Can be used only in episodic environments. """
 
     def __init__(self, num_of_actions, network, optimizer, gamma=0.999, use_gpu=False):

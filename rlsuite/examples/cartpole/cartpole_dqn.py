@@ -3,12 +3,10 @@ import torch.optim as optim
 import gym
 import numpy as np
 import logging.config
+from rlsuite.builders.agent_builder import DQNAgentBuilder
+from rlsuite.builders.factories import memory_factory
 from rlsuite.examples.cartpole import cartpole_constants
 from rlsuite.examples.cartpole.cartpole_constants import check_termination, LOGGER_PATH, LOG_WEIGHTS
-from rlsuite.utils.memory import Memory, MemoryPER
-from rlsuite.nn.policy_fc import PolicyFC
-from rlsuite.nn.dqn_archs import ClassicDQN, Dueling
-from rlsuite.agents.nn_agents.dqn_agents import DQNAgent, DDQNAgent
 from rlsuite.utils.functions import plot_rewards, plot_rewards_completed, plot_epsilon, log_parameters_histograms
 from rlsuite.utils.constants import LOGGER
 
@@ -31,41 +29,30 @@ if __name__ == "__main__":
     num_of_observations = env.observation_space.shape[0]
     num_of_actions = env.action_space.n
 
+    # TODO better to use configuration files for such parameters
     lr = 1e-3
     layers_dim = [24, 48]
     dropout = 0
     gamma = 1
     eps_decay, eps_start, eps_end = 0.001, 1, 0
     mem_size = 15_000
-
-    dueling = True  # Classic and Dueling DQN architectures are supported
-    per = True
-    double = True
-
-    if dueling:
-        dqn_arch = Dueling
-    else:
-        dqn_arch = ClassicDQN
-
-    network = PolicyFC(num_of_observations, layers_dim, num_of_actions, dqn_arch, dropout)
-
-    log.debug("Number of parameters in our model: {}".format(sum(x.numel() for x in network.parameters())))
+    arch = 'dueling'
+    mem_type = 'per'
+    agent_algorithm = 'ddqn'
 
     criterion = torch.nn.MSELoss(reduction='none')  # torch.nn.SmoothL1Loss()  # Huber loss
-    optimizer = optim.Adam(network.parameters(), lr)
+    optimizer = optim.Adam
     # scheduler = ReduceLROnPlateau(optimizer, factor=0.9, patience=20)  # not used in update for now
     # ExponentialLR(optimizer, lr_decay)  # alternative scheduler
     # scheduler will reduce the lr by the specified factor when metric has stopped improving
 
-    if per:
-        memory = MemoryPER(mem_size)
-    else:
-        memory = Memory(mem_size)
+    memory = memory_factory(mem_type, mem_size)
 
-    if double:
-        agent = DDQNAgent(num_of_actions, network, criterion, optimizer, gamma, eps_decay, eps_start, eps_end)
-    else:
-        agent = DQNAgent(num_of_actions, network, criterion, optimizer, gamma, eps_decay, eps_start, eps_end)
+    agent = DQNAgentBuilder(num_of_observations, num_of_actions, gamma, eps_decay, eps_start, eps_end)\
+        .set_criterion(criterion)\
+        .build_network(layers_dim, arch) \
+        .build_optimizer(optimizer, lr) \
+        .build(agent_algorithm)
 
     steps_done = 0
     train_rewards, eval_rewards = {}, {}
@@ -159,8 +146,8 @@ if __name__ == "__main__":
         tensorboard_writer.add_graph(agent.policy_net, torch.tensor(state, device=agent.device))
 
         # first dict with hparams, second dict with metrics
-        tensorboard_writer.add_hparams({'lr': lr, 'gamma': gamma, 'HL Dims': str(layers_dim), 'Double': double, 'Dueling': dueling,
-                            'PER': per, 'Mem Size': mem_size, 'Target_upd_interval': TARGET_NET_UPDATE_PERIOD,
+        tensorboard_writer.add_hparams({'lr': lr, 'gamma': gamma, 'HL Dims': str(layers_dim), 'Algorithm': agent_algorithm, 'Arch': arch,
+                            'Mem_type': mem_type, 'Mem Size': mem_size, 'Target_upd_interval': TARGET_NET_UPDATE_PERIOD,
                             'Batch Size': BATCH_SIZE, 'EPS_DECAY': eps_decay},
                                        {'episodes_needed': len(train_rewards)})
         tensorboard_writer.flush()

@@ -5,6 +5,23 @@ LOGGER = 'simpleExample'
 logger_path = ""
 
 
+class NetArchitectures(str, Enum):
+    DUELING = 'dueling'
+    VANILLA = 'vanilla'
+
+
+class TypesOfMemory(str, Enum):
+    PER = 'per'
+    VANILLA = 'vanilla'
+
+
+class DeepRLAgents(str, Enum):
+    ACTOR_CRITIC = 'actor_critic'
+    POLICY = 'policy_grad'
+    DQN = 'dqn'
+    DDQN = 'ddqn'
+
+
 class RLAlgorithms(Enum):
     Q_LEARNING = '0'
     SARSA = '1'

@@ -22,6 +22,7 @@ class DQNAgent(Agent):
         self.eps_start = eps_start
         self.eps_end = eps_end
 
+
     def _init_target_net(self):
         """ Create a net of same specifications as policy net and initialize it with the same weights as well. """
 
@@ -110,6 +111,7 @@ class DQNAgent(Agent):
 
     def train_mode(self):
         self.policy_net.train()
+        # checked and successfully sets policy_net.training
 
     def eval_mode(self):
         self.policy_net.eval()
