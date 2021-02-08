@@ -1,5 +1,4 @@
-# from distutils.core import setup
-from setuptools import setup, find_namespace_packages, find_packages
+from setuptools import setup, find_packages
 
 with open('README.md', 'r') as long_desc_file:
     long_description = long_desc_file.read()
@@ -9,7 +8,6 @@ setup(
     version='1.0.0',
     maintainer='Nikiforos Mandilaras',
     maintainer_email='nikmand@outlook.com',
-    # package_dir={'': 'rlsuite'},
     packages=find_packages(),
     url='https://github.com/nikmand/Reinforcement-Learning-Library',
     license='',
