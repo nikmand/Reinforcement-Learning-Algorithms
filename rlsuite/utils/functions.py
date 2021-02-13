@@ -7,7 +7,7 @@ def config_parser(filename):
     config.read(filename)
     # TODO add a warning if file is not found
 
-    return config['env'], config['agent'], config['misc']
+    return config
 
 
 def init_tensorboard(launch_tensorboard):
@@ -18,16 +18,15 @@ def init_tensorboard(launch_tensorboard):
     return writer
 
 
-def log_parameters_histograms(tensorboard_writer, neural_net, i_episode, neural_net_name=None):
+def log_parameters_histograms(tboard_writer, neural_net, step, neural_net_name=None):
     """ Logs in Tensorboard histograms about weights and biases evolution during training."""
 
     for parameters_name, parameters_values in neural_net.named_parameters():
         layer_name, parameters_type = parameters_name.rsplit(".", 1)  # parameters_type: weights or biases
         if neural_net_name:
             neural_net_name += '/'
-        tensorboard_writer.add_histogram(neural_net_name + layer_name + '/' + parameters_type, parameters_values,
-                                         i_episode)
-    tensorboard_writer.flush()
+        tboard_writer.add_histogram(neural_net_name + layer_name + '/' + parameters_type, parameters_values, step)
+    tboard_writer.flush()
 
     return
 
