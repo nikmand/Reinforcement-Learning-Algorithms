@@ -1,5 +1,3 @@
-import torch
-
 from rlsuite.builders.factories import dqn_agent_factory, arch_factory
 from rlsuite.nn.policy_fc import PolicyFC
 import logging.config
@@ -55,8 +53,7 @@ class DQNAgentBuilder:
         log.info("Loading weights from checkpoint.")
 
         try:
-            weights = torch.load(checkpoint_path)
-            self.network.load_state_dict(weights)
+            self.network.load_checkpoint(checkpoint_path)
         except AttributeError:
             log.warning("No file was provided, checkpointing is aborted.")
         except  FileNotFoundError:
@@ -66,6 +63,7 @@ class DQNAgentBuilder:
 
     # TODO this implementation is architecture dependent, make it general or implement also the Vanilla DQN case.
     #   Weights used to be loaded from checkpoint, adapt this so it refers to the network weights.
+    #   Maybe the network it self of even arch should take care of this.
     def init_weights(self):
         raise NotImplementedError
         # log.info("Weights of last layer heads will be reinitialized.")
@@ -84,28 +82,3 @@ class DQNAgentBuilder:
                                        self.num_of_actions, self.gamma, self.eps_decay, self.eps_start, self.eps_end)
 
         return self.agent
-
-
-# def __init__(self, dataset_name):
-#     self.dataset_name = dataset_name
-#     path = os.path.join('data', dataset_name)
-#
-#     if dataset_name in ['cifar', 'mimgnet', 'aircraft', 'quickdraw', 'vgg_flower']:
-#       # meta-training set
-#       x = np.load(os.path.join(path, 'train.npy'), encoding='bytes')
-#       self.C_mtr = len(x)
-#       self.N_mtr = [len(xx) for xx in x]
-#       self.x_mtr = [np.reshape(x[i], [self.N_mtr[i], -1]) for i in range(self.C_mtr)]
-#
-#     # meta-validation set
-#     if not dataset_name in ['traffic', 'fashion-mnist']:
-#       x = np.load(os.path.join(path, 'valid.npy'), encoding='bytes')
-#       self.C_mval = len(x)
-#       self.N_mval = [len(xx) for xx in x]
-#       self.x_mval = [np.reshape(x[i], [self.N_mval[i], -1]) for i in range(self.C_mval)]
-#
-#     # meta-test set
-#     x = np.load(os.path.join(path, 'test.npy'), encoding='bytes')
-#     self.C_mte = len(x)
-#     self.N_mte = [len(xx) for xx in x]
-#     self.x_mte = [np.reshape(x[i], [self.N_mte[i], -1]) for i in range(self.C_mte)]

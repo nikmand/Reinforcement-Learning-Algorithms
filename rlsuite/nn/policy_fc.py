@@ -26,3 +26,7 @@ class PolicyFC(nn.Module):
 
     def save_checkpoint(self, filename):
         torch.save(self.state_dict(), filename)
+
+    def load_checkpoint(self, filename):
+        weights = torch.load(filename)
+        self.load_state_dict(weights)
