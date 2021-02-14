@@ -1,8 +1,7 @@
 from enum import Enum
 
-LOGGER = 'simpleExample'
-
-logger_path = ""
+LOGGER = 'rlsuite'
+LOGGER_PATH = 'logging.conf'
 
 
 class NetArchitectures(str, Enum):

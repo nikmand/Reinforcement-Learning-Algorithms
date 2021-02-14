@@ -1,10 +1,8 @@
 from rlsuite.builders.factories import dqn_agent_factory, arch_factory
 from rlsuite.nn.policy_fc import PolicyFC
 import logging.config
-from rlsuite.utils.constants import LOGGER
-from rlsuite.examples.cartpole.cartpole_constants import LOGGER_PATH
+from rlsuite.utils.constants import LOGGER, LOGGER_PATH
 
-# TODO properly configure logger path
 logging.config.fileConfig(LOGGER_PATH)
 log = logging.getLogger(LOGGER)
 

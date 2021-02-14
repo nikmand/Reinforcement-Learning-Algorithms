@@ -11,7 +11,7 @@ var_freq = [x_freq, x_dot_freq, theta_freq, theta_dot_freq]
 
 USE_TENSORBOARD = True
 LOG_WEIGHTS = False
-LOGGER_PATH = '../../logging.conf'
+LOGGER_PATH = 'logging.conf'
 
 max_episodes = 500
 max_steps = 195
