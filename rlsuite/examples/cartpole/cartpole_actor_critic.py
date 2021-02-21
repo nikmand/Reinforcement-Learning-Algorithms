@@ -6,15 +6,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 from rlsuite.examples.cartpole import cartpole_constants
 from rlsuite.examples.cartpole.cartpole_constants import check_termination, LOGGER_PATH, LOG_WEIGHTS
-from rlsuite.agents.nn_agents.a2c_agent import A2C
-from rlsuite.utils.functions import plot_rewards
-from rlsuite.nn.actor_critic import ActorCritic
+from rlsuite.agents.nn_agents.actor_critic_agent import ActorCriticMC, ActorCriticTD
+from rlsuite.utils.functions import plot_rewards_completed
+from rlsuite.nn.actor_critic import ActorCriticNet
 from torch.utils.tensorboard import SummaryWriter
 from rlsuite.utils.constants import LOGGER
 
 logging.config.fileConfig(LOGGER_PATH)
 logger = logging.getLogger(LOGGER)
-# TODO this implementation use a high variance MC approach, use TD(λ) instead
 
 if __name__ == "__main__":
 
@@ -30,24 +29,26 @@ if __name__ == "__main__":
     num_of_actions = env.action_space.n
     train_rewards, eval_durations = {}, {}
 
-    lr = 3e-2
-    layers_dim = [6, 6]
+    lr = 1e-3
+    layers_dim = [24, 48]
     gamma = 1
     dropout = 0.1
 
-    network = ActorCritic(num_of_observations, layers_dim, num_of_actions, dropout)
+    network = ActorCriticNet(num_of_observations, layers_dim, num_of_actions, dropout)
 
     logger.debug("Number of parameters in our model: {}".format(sum(x.numel() for x in network.parameters())))
 
-    criterion = torch.nn.MSELoss()
+    criterion = torch.nn.MSELoss()  # or MSELoss not great differences observed
     optimizer = optim.Adam(network.parameters(), lr)
 
-    agent = A2C(env.action_space.n, network, criterion, optimizer, gamma)
+    agent = ActorCriticTD(env.action_space.n, network, criterion, optimizer, gamma)
 
-    for i_episode in range(cartpole_constants.max_episodes):
+    for i_episode in range(1000):
         log_probs, state_values, rewards, max_probs = [], [], [], []
+        episode_loss = 0
 
-        next_state = env.reset()
+        state = env.reset()
+        state = np.float32(state)
 
         done = False
         train = True
@@ -61,23 +62,26 @@ if __name__ == "__main__":
             episode_duration += 1
             # if not train:
             #     env.render()
-            state = np.float32(next_state)
             action, log_prob, state_value, max_prob = agent.choose_action(state, train=train)  # TODO merge train parameter with model_train
             next_state, reward, done, _ = env.step(action)
+            state = np.float32(next_state)
 
             log_probs.append(log_prob)  # even if episode is done we keep the reward and log prop, is this a problem?
             state_values.append(state_value)
             rewards.append(reward)
             max_probs.append(max_prob)  # only needed for monitoring # what is it's purpose
 
+            if train:
+                episode_loss += agent.update(log_prob, state_value, state, reward, done)
+
         episode_reward = sum(rewards)
         if train:
             train_rewards[i_episode] = episode_reward
-            discounted_rewards = agent.calculate_rewards(rewards)
-            loss = agent.update(log_probs, state_values, discounted_rewards)
+            # discounted_rewards = agent.calculate_rewards(rewards)
+            # loss = agent.update(log_probs, state_values, discounted_rewards)
             if cartpole_constants.USE_TENSORBOARD:
                 writer.add_scalars('Overview/Rewards', {'Train': episode_reward}, i_episode)
-                writer.add_scalar('Overview/Loss', loss, i_episode)
+                writer.add_scalar('Overview/Loss', episode_loss, i_episode)
                 writer.add_scalar('Reward/Train', episode_reward, i_episode)
                 writer.add_scalar('Probs/Train', sum(max_probs) / len(max_probs), i_episode)
                 writer.flush()
@@ -102,7 +106,7 @@ if __name__ == "__main__":
     else:
         logger.info("Unable to reach goal in {} training episodes.".format(len(train_rewards)))
 
-    figure = plot_rewards(train_rewards, eval_durations, completed=True)
+    figure = plot_rewards_completed(train_rewards, eval_durations)
 
     if cartpole_constants.USE_TENSORBOARD:
         writer.add_figure('Plot', figure)

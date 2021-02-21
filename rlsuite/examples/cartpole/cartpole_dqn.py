@@ -31,13 +31,13 @@ if __name__ == "__main__":
 
     # TODO better to use configuration files for such parameters
     lr = 1e-3
-    layers_dim = [24, 48]
+    layers_dim = [24, 48]  # 24, 48
     dropout = 0
     gamma = 1
     eps_decay, eps_start, eps_end = 0.001, 1, 0
-    mem_size = 15_000
+    mem_size = 10_000
     arch = 'dueling'
-    mem_type = 'per'
+    mem_type = 'vanilla'
     agent_algorithm = 'ddqn'
 
     criterion = torch.nn.MSELoss(reduction='none')  # torch.nn.SmoothL1Loss()  # Huber loss
@@ -87,10 +87,10 @@ if __name__ == "__main__":
             state = next_state
             episode_reward += reward
 
-            if memory.tree.n_entries < 500:
-                # DQN paper starts from a partially loaded memory as in the beginning it just collects experiences
-                # we do nothing until we collect a number of experiences
-                continue
+            # if memory.tree.n_entries < 500:
+            #     # DQN paper starts from a partially loaded memory as in the beginning it just collects experiences
+            #     # we do nothing until we collect a number of experiences
+            #     continue
             if train:
                 steps_done += 1
                 try:
@@ -147,7 +147,7 @@ if __name__ == "__main__":
 
         # first dict with hparams, second dict with metrics
         tensorboard_writer.add_hparams({'lr': lr, 'gamma': gamma, 'HL Dims': str(layers_dim), 'Algorithm': agent_algorithm, 'Arch': arch,
-                            'Mem_type': mem_type, 'Mem Size': mem_size, 'Target_upd_interval': TARGET_NET_UPDATE_PERIOD,
+                            'Mem Type': mem_type, 'Mem Size': mem_size, 'Target_upd_interval': TARGET_NET_UPDATE_PERIOD,
                             'Batch Size': BATCH_SIZE, 'EPS_DECAY': eps_decay},
                                        {'episodes_needed': len(train_rewards)})
         tensorboard_writer.flush()

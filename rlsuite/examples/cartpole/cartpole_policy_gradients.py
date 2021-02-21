@@ -30,7 +30,7 @@ if __name__ == "__main__":
     train_rewards, eval_durations = {}, {}
 
     lr = 1e-2  # from pytorch tutorial and others
-    layers_dim = [6]
+    layers_dim = [16]  # gives good results we various configurations
     gamma = 0.999
 
     network = PolicyFC(num_of_observations, layers_dim, num_of_actions)

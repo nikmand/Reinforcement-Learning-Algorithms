@@ -1,7 +1,7 @@
 import torch.nn as nn
 
 
-class ActorCritic(nn.Module):
+class ActorCriticNet(nn.Module):
     """  """
     def __init__(self, features_dim, layers_dim, actions_dim, dropout=0.1):
         super().__init__()
@@ -9,7 +9,7 @@ class ActorCritic(nn.Module):
         layers_out = layers_dim
         output_dim = layers_dim[-1]
         self.layers = nn.Sequential(*[nn.Sequential(nn.Linear(in_feats, out_feats),
-                                                    nn.Dropout(p=dropout),
+                                                    # nn.Dropout(p=dropout),
                                                     nn.ELU())
                                       for in_feats, out_feats in zip(layers_in, layers_out)])
 

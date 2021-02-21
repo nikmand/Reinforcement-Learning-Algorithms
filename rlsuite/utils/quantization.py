@@ -29,9 +29,6 @@ class Quantization:
         :return: an array that contains the numbers that constitute bins bounds
         """
 
-        # TODO investigate if it is useful to split the interval based on a distribution
-        # so that higher bin frequency is used for points which are more probable to come up
-
         intervals = np.linspace(low_barrier, high_barrier, num_bins + 1, endpoint=True)
         # intervals = scipy.stats.norm.ppf(intervals)
         return intervals
@@ -48,7 +45,7 @@ class Quantization:
             np.digitize(observation, var_bin) - 1 for observation, var_bin in zip(observations, self.dimensions_bins))
 
         # TODO check for values that fall outside of bins borders
-        # If values in observations are beyond the bounds of bins, 0 or len(bins) is returned as appropriate.
+        #   If values in observations are beyond the bounds of bins, 0 or len(bins) is returned as appropriate.
         return digitized
 
 

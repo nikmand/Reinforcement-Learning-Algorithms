@@ -2,9 +2,10 @@ import torch
 from rlsuite.agents.agent import Agent
 from torch.distributions import Categorical
 import torch.nn.functional as F
+from abc import abstractmethod
 
 
-class A2C(Agent):
+class ActorCritic(Agent):
 
     def __init__(self, num_of_actions, network, criterion, optimizer, gamma=0.999, gpu=False):
         super().__init__(num_of_actions, gamma)
@@ -27,6 +28,25 @@ class A2C(Agent):
         log_prob = m.log_prob(action)
         return action.item(), log_prob, state_value, probs.max()  # action is a tensor so we return just the number
 
+    @abstractmethod
+    def update(self, *args):
+        raise NotImplementedError
+
+    def train_mode(self):
+        self.actor_critic_net.train()
+
+    def eval_mode(self):
+        self.actor_critic_net.eval()
+
+    # def save_checkpoint(self, filename):
+    #     raise NotImplementedError
+
+
+class ActorCriticMC(ActorCritic):
+
+    def __init__(self, num_of_actions, network, criterion, optimizer, gamma=0.999, gpu=False):
+        super().__init__(num_of_actions, network, criterion, optimizer, gamma, gpu)
+
     def update(self, log_probs, state_values, discounted_rewards):
 
         policy_loss, state_value_loss = [], []
@@ -41,7 +61,7 @@ class A2C(Agent):
             # gradient should not be computed for advantage
             policy_loss.append(-log_prob * advantage)
 
-            # calculate critic (value) loss using L1 smooth loss
+            # calculate critic (value) loss
             state_value_loss.append(self.criterion(state_value, torch.tensor([discounted_reward], device=self.device)))
 
         self.optimizer.zero_grad()
@@ -52,7 +72,7 @@ class A2C(Agent):
         return loss
 
     def calculate_rewards(self, rewards):
-        """"""
+        """  """
 
         discounted_rewards = []
         discounted_reward = 0
@@ -65,12 +85,25 @@ class A2C(Agent):
 
         return discounted_rewards
 
-    def train_mode(self):
-        self.actor_critic_net.train()
 
-    def eval_mode(self):
-        self.actor_critic_net.eval()
+class ActorCriticTD(ActorCritic):
 
-    def save_checkpoint(self, filename):
-        raise NotImplementedError
+    def __init__(self, num_of_actions, network, criterion, optimizer, gamma=0.999, gpu=False):
+        super().__init__(num_of_actions, network, criterion, optimizer, gamma, gpu)
 
+    def update(self, log_prob, predicted_state_value, next_state, reward, done):
+        """ Updates are based on single step that means high bias """
+
+        next_state = torch.tensor(next_state, device=self.device)
+        _, next_state_value = self.actor_critic_net(next_state)
+        target_value = (reward + (1 - int(done)) * self.gamma * next_state_value).detach()
+        td_delta = target_value - predicted_state_value
+        policy_loss = -log_prob * td_delta
+        state_value_loss = self.criterion(target_value, predicted_state_value)
+        loss = policy_loss + state_value_loss
+
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+
+        return loss

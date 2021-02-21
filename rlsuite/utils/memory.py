@@ -3,8 +3,6 @@ import numpy as np
 from rlsuite.utils.sumtree import SumTree
 from collections import deque
 
-# TODO consider if we need to reorganize this classes
-
 
 class Memory:
 

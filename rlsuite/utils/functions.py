@@ -1,13 +1,4 @@
 import matplotlib.pyplot as plt
-import configparser
-
-
-def config_parser(filename):
-    config = configparser.ConfigParser()
-    config.read(filename)
-    # TODO add a warning if file is not found
-
-    return config
 
 
 def init_tensorboard(launch_tensorboard):

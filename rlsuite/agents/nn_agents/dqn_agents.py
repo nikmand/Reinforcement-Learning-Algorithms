@@ -22,7 +22,6 @@ class DQNAgent(Agent):
         self.eps_start = eps_start
         self.eps_end = eps_end
 
-
     def _init_target_net(self):
         """ Create a net of same specifications as policy net and initialize it with the same weights as well. """
 
@@ -64,10 +63,10 @@ class DQNAgent(Agent):
         # Compute V(s_{t+1}) for all next states.
         next_state_values = self._compute_next_state_values(next_states)
         # Compute the expected Q targets
-        expected_q_values = rewards + (1 - done.int()) * self.gamma * next_state_values
+        target_q_values = rewards + (1 - done.int()) * self.gamma * next_state_values
         # we want to take into account next states' values only if they are not final states
         predicted_q_values = predicted_q_values.squeeze(1)
-        target_q_values = expected_q_values.detach()
+        target_q_values = target_q_values.detach()
 
         loss = self.criterion(predicted_q_values, target_q_values)
 
@@ -102,7 +101,6 @@ class DQNAgent(Agent):
     def adjust_exploration(self, decaying_schedule):
         """ Progressively decrease the exploration rate. """
 
-        # TODO check VDBE-Softmax
         self.epsilon = self.eps_end + (self.eps_start - self.eps_end) * math.exp(-decaying_schedule * self.eps_decay)
         # this update function is used by the freeCodeCamp series tutorial in Deep RL
 
