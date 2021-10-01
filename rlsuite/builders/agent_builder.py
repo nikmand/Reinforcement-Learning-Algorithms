@@ -17,7 +17,7 @@ class AgentBuilder:
 class DQNAgentBuilder:
     """ Builder takes over the construction of a DQN Agent object. """
 
-    def __init__(self, num_of_observations, num_of_actions, gamma, eps_decay, eps_start, eps_end):
+    def __init__(self, num_of_observations, num_of_actions, gamma, eps_decay, eps_start, eps_end, gpu):
         self.network = None
         self.optimizer = None
         self.criterion = None
@@ -28,6 +28,7 @@ class DQNAgentBuilder:
         self.eps_decay = eps_decay
         self.eps_start = eps_start
         self.eps_end = eps_end
+        self.gpu = gpu
 
     def build_optimizer(self, optimizer, lr):
         self.optimizer = optimizer(self.network.parameters(), lr)
@@ -47,6 +48,7 @@ class DQNAgentBuilder:
 
         return self
 
+    # TODO check if this method should operate at agent level instead of network
     def load_checkpoint(self, checkpoint_path):
         log.info("Loading weights from checkpoint.")
 
@@ -54,7 +56,7 @@ class DQNAgentBuilder:
             self.network.load_checkpoint(checkpoint_path)
         except AttributeError:
             log.warning("No file was provided, checkpointing is aborted.")
-        except  FileNotFoundError:
+        except FileNotFoundError:
             log.warning("File was not found, checkpointing is aborted.")
 
         return self
@@ -77,6 +79,6 @@ class DQNAgentBuilder:
 
     def build(self, agent_algorithm):
         self.agent = dqn_agent_factory(agent_algorithm, self.network, self.criterion, self.optimizer,
-                                       self.num_of_actions, self.gamma, self.eps_decay, self.eps_start, self.eps_end)
+                                       self.num_of_actions, self.gamma, self.eps_decay, self.eps_start, self.eps_end, self.gpu)
 
         return self.agent

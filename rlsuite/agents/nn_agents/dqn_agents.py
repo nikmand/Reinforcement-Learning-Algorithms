@@ -81,7 +81,7 @@ class DQNAgent(Agent):
         #     param.grad.data.clamp_(-1, 1)           # but the paper applies this to the loss
         self.optimizer.step()  # updates weights
         # self.scheduler.step(loss)  # dynamically change the lr
-        errors = torch.abs(predicted_q_values - target_q_values).data.numpy()
+        errors = torch.abs(predicted_q_values - target_q_values).cpu().data.numpy()
 
         return loss, errors
 
@@ -107,6 +107,9 @@ class DQNAgent(Agent):
     def save_checkpoint(self, filename):
         self.policy_net.save_checkpoint(filename)
 
+    def load_checkpoint(self, filename):
+        self.policy_net.load_checkpoint(filename)
+
     def train_mode(self):
         self.policy_net.train()
         # checked and successfully sets policy_net.training
@@ -119,8 +122,8 @@ class DDQNAgent(DQNAgent):
     """ Implementation of  Double DQN. The selection of the action is disconnected from the estimation of its value. """
 
     def __init__(self, num_of_actions, network, criterion, optimizer, gamma=0.99, eps_decay=0.0005, eps_start=1,
-                 eps_end=0.01):
-        super().__init__(num_of_actions, network, criterion, optimizer, gamma, eps_decay, eps_start, eps_end)
+                 eps_end=0.01, use_gpu=False):
+        super().__init__(num_of_actions, network, criterion, optimizer, gamma, eps_decay, eps_start, eps_end, use_gpu)
 
     def _compute_next_state_values(self, next_states):
         """ next_states batch is passed to policy_net and the actions that give the max value are selected.

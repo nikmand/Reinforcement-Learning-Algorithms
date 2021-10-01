@@ -12,3 +12,8 @@ In a new conda environment execute:
     
     pip install -r requirements.txt 
     
+### Tests
+
+In order to execute the test provided run:
+
+    python -m unittest discover rlsuite/tests

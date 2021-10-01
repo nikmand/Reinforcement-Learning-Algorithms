@@ -138,3 +138,8 @@ tree_index  0 0  0  We fill the leaves from left to right
     @property
     def total_priority(self):
         return self.tree[0]  # Returns the root node
+
+    def clear(self):
+        """  """
+        self.tree = np.zeros(2 * self.capacity - 1)
+        self.n_entries = 0

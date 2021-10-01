@@ -89,7 +89,7 @@ class Trainer(ABC):
 
         steps_done += 1
         try:
-            transitions, indices, is_weights = self.memory.sample(self.batch_size)
+            transitions, indices, is_weights = self.memory.sample()
         except ValueError:
             return
         loss, errors = self.agent.update(transitions, is_weights)  # Perform one step of optimization on the policy net

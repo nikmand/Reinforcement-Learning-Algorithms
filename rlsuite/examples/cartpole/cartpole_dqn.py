@@ -9,10 +9,9 @@ from rlsuite.examples.cartpole import cartpole_constants
 from rlsuite.examples.cartpole.cartpole_constants import check_termination, LOGGER_PATH, LOG_WEIGHTS
 from rlsuite.utils.functions import plot_rewards, plot_rewards_completed, plot_epsilon, log_parameters_histograms
 from rlsuite.utils.constants import LOGGER
+import os
 
-TARGET_NET_UPDATE_PERIOD = 100  # target net is updated with the weights of policy net once every 100 updates (steps)
-BATCH_SIZE = 32
-
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 logging.config.fileConfig(LOGGER_PATH)
 log = logging.getLogger(LOGGER)
 
@@ -36,9 +35,12 @@ if __name__ == "__main__":
     gamma = 1
     eps_decay, eps_start, eps_end = 0.001, 1, 0
     mem_size = 10_000
+    target_net_update_period = 100  # target net is updated with the weights of policy net once every n updates (steps)
+    batch_size = 32
     arch = 'dueling'
     mem_type = 'vanilla'
     agent_algorithm = 'ddqn'
+    gpu = False
 
     criterion = torch.nn.MSELoss(reduction='none')  # torch.nn.SmoothL1Loss()  # Huber loss
     optimizer = optim.Adam
@@ -46,9 +48,9 @@ if __name__ == "__main__":
     # ExponentialLR(optimizer, lr_decay)  # alternative scheduler
     # scheduler will reduce the lr by the specified factor when metric has stopped improving
 
-    memory = memory_factory(mem_type, mem_size)
+    memory = memory_factory(mem_type, mem_size, batch_size)
 
-    agent = DQNAgentBuilder(num_of_observations, num_of_actions, gamma, eps_decay, eps_start, eps_end)\
+    agent = DQNAgentBuilder(num_of_observations, num_of_actions, gamma, eps_decay, eps_start, eps_end, gpu)\
         .set_criterion(criterion)\
         .build_network(layers_dim, arch) \
         .build_optimizer(optimizer, lr) \
@@ -94,14 +96,14 @@ if __name__ == "__main__":
             if train:
                 steps_done += 1
                 try:
-                    transitions, indices, is_weights = memory.sample(BATCH_SIZE)
+                    transitions, indices, is_weights = memory.sample()
                 except ValueError:
                     continue
                 loss, errors = agent.update(transitions, is_weights)  # Perform one step of optimization on the policy net
                 episode_loss += loss
                 agent.adjust_exploration(steps_done)  # rate is updated at every step - taken from the tutorial
                 memory.batch_update(indices, errors)
-                if steps_done % TARGET_NET_UPDATE_PERIOD == 0:
+                if steps_done % target_net_update_period == 0:
                     # Update the target network, the frequency of the update had crucial impact
                     agent.update_target_net()
                     if cartpole_constants.USE_TENSORBOARD and LOG_WEIGHTS:
@@ -147,8 +149,8 @@ if __name__ == "__main__":
 
         # first dict with hparams, second dict with metrics
         tensorboard_writer.add_hparams({'lr': lr, 'gamma': gamma, 'HL Dims': str(layers_dim), 'Algorithm': agent_algorithm, 'Arch': arch,
-                            'Mem Type': mem_type, 'Mem Size': mem_size, 'Target_upd_interval': TARGET_NET_UPDATE_PERIOD,
-                            'Batch Size': BATCH_SIZE, 'EPS_DECAY': eps_decay},
+                            'Mem Type': mem_type, 'Mem Size': mem_size, 'Target_upd_interval': target_net_update_period,
+                            'Batch Size': batch_size, 'EPS_DECAY': eps_decay},
                                        {'episodes_needed': len(train_rewards)})
         tensorboard_writer.flush()
         tensorboard_writer.close()
